@@ -1,0 +1,8 @@
+{
+  "name": "stem-editing-v0",
+  "operations": ["add", "remove", "replace"],
+  "sample_rate": 32000,
+  "channels": 1,
+  "clip_seconds": 8,
+  "manifest": "data/benchmark.jsonl"
+}

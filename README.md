@@ -61,3 +61,5 @@ For each metric, the protocol will specify the evaluator version, audio normaliz
 - **Preservation-aware alignment scope** — narrowed to three stem edits, adapter training, pairwise preferences, and joint edit/preservation evaluation.
 
 The next implementation milestone is a reproducible benchmark manifest and baseline inference pipeline.
+
+The benchmark manifest validator is now available at `src/validate_manifest.py`; it checks required fields, supported operations/splits, valid JSONL, and unique example IDs. The baseline inference pipeline remains the next milestone.
