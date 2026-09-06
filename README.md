@@ -79,3 +79,5 @@ Continuous integration builds the Docker image and runs the complete test suite 
 Experiment metadata can be recorded with `src/record_run.py`; it captures hashes for the configuration and manifest, the git commit, runtime details, and the selected device.
 
 The audio sourcing, split, annotation, and leakage controls are specified in `docs/data_protocol.md`. Raw audio and stems are intentionally excluded from version control.
+
+The metadata-only provenance example is in `data/registry.example.jsonl`; validate a private registry with `src/validate_registry.py` before creating benchmark manifests.
