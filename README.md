@@ -106,6 +106,8 @@ The compact experiment dashboard is available with `make ui` at `http://localhos
 
 The dashboard control API is available with `make api` at `http://localhost:8000`. Its `/device` endpoint reports accelerator visibility and `/experiments/preview` validates a run contract before training is launched.
 
+For actual local MusicGen training, stop the Docker API and run `make api-native`. This lets the API launch the native MPS worker with access to the local model cache and BabySlakh files; the Docker UI can continue using `http://localhost:8000`, and MLflow remains the tracking service.
+
 The remaining implementation milestones and acceptance criteria are tracked in [`research/roadmap.md`](research/roadmap.md). The roadmap covers local-first editing, alignment, UI, tracking, data experiments, and human evaluation; cloud scaling is intentionally deferred.
 
 Deterministic target rendering is available at `src/build_edit_targets.py`. It supports stem subtraction for remove, stem addition for add, and replacement by subtracting the target stem and adding an explicitly recorded replacement stem. Rendered audio belongs in ignored local output directories; manifests should record the source and target paths only.
