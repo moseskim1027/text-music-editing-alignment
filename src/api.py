@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from threading import Thread
 import json
 import subprocess
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field
 from src.check_device import probe
 
 app = FastAPI(title="Music Edit Lab API", version="0.1.0")
+app.mount("/artifacts", StaticFiles(directory="outputs", check_dir=False), name="artifacts")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8080"], allow_methods=["GET", "POST"], allow_headers=["*"])
 run_state = {"status": "idle", "step": 0, "steps": 0, "result": None}
 
@@ -47,7 +49,7 @@ def preview(request: ExperimentRequest) -> dict:
 
 def _run_training(request: ExperimentRequest) -> None:
     try:
-        run_state.update(status="running", step=0, steps=request.steps, result=None)
+        run_state.update(status="running", phase="training", step=0, steps=request.steps, result=None)
         process = subprocess.Popen(
             [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--steps", str(request.steps), "--device", request.device],
             stdout=subprocess.PIPE,
@@ -61,6 +63,8 @@ def _run_training(request: ExperimentRequest) -> None:
                 event = json.loads(line)
                 if event.get("event") == "progress":
                     run_state.update(step=event["step"], steps=event["steps"], loss=event["loss"])
+                elif event.get("event") == "phase":
+                    run_state.update(phase=event["phase"])
             except (ValueError, TypeError, KeyError):
                 continue
         error = process.stderr.read() if process.stderr else ""
@@ -68,10 +72,11 @@ def _run_training(request: ExperimentRequest) -> None:
         output = "".join(output_lines)
         if process.returncode:
             raise RuntimeError(error[-2000:] or "training worker failed")
+        run_state.update(phase="generating")
         run_state["result"] = {"output": output}
-        run_state.update(status="completed", step=request.steps)
+        run_state.update(status="completed", phase="completed", step=request.steps)
     except Exception as exc:
-        run_state.update(status="failed", result={"error": str(exc)})
+        run_state.update(status="failed", phase="failed", result={"error": str(exc)})
 
 
 @app.post("/experiments/start")
