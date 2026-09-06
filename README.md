@@ -62,6 +62,6 @@ For each metric, the protocol will specify the evaluator version, audio normaliz
 
 The next implementation milestone is a reproducible benchmark manifest and baseline inference pipeline.
 
-The benchmark manifest validator is now available at `src/validate_manifest.py`; it checks required fields, supported operations/splits, valid JSONL, and unique example IDs. The baseline inference pipeline remains the next milestone.
+The benchmark manifest validator is available at `src/validate_manifest.py`; it checks required fields, supported operations/splits, valid JSONL, and unique example IDs. The manifest-driven baseline inference contract is available at `src/baseline_inference.py`; run it with `--dry-run` before installing the optional AudioCraft backend.
 
 The repository is Dockerized for reproducible development and testing. Run `docker compose build` followed by `docker compose run --rm research` to execute the test suite in the pinned Python environment. The default container runs as a non-root user, and local data/checkpoints are excluded from the image.
