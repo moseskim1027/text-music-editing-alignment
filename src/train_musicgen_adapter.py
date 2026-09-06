@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal one-example MusicGen LoRA reconstruction smoke test."""
+"""One-example source-conditioned MusicGen LoRA edit training run."""
 
 import argparse
 import json
@@ -23,6 +23,16 @@ def normalize_decoder_start_token(model):
     return model
 
 
+def load_audio(path: Path, target_samples: int, sf, torchaudio) -> torch.Tensor:
+    audio, sample_rate = sf.read(path, dtype="float32")
+    if audio.ndim > 1:
+        audio = audio.mean(axis=1)
+    wave = torch.from_numpy(audio).unsqueeze(0)
+    if sample_rate != 32000:
+        wave = torchaudio.functional.resample(wave, sample_rate, 32000)
+    return wave[:, :target_samples]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", type=Path, default=Path("data/derived.jsonl"), nargs="?")
@@ -36,12 +46,14 @@ def main() -> int:
     from transformers import AutoProcessor, MusicgenForConditionalGeneration
 
     record = json.loads(args.manifest.read_text().splitlines()[0])
-    audio, sample_rate = sf.read(record["source_audio"], dtype="float32")
-    if audio.ndim > 1:
-        audio = audio.mean(axis=1)
-    wave = torch.from_numpy(audio).unsqueeze(0)
-    if sample_rate != 32000:
-        wave = torchaudio.functional.resample(wave, sample_rate, 32000)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    wave = load_audio(Path(record["source_audio"]), 32000 * 4, sf, torchaudio)
+    target_path = Path(record["target_audio"])
+    if not target_path.exists():
+        from src.build_edit_targets import render_target
+        target_path = args.output_dir / "reference_target.wav"
+        render_target(Path(record["source_audio"]), Path(record["target_stem_audio"]), target_path, record["operation"], Path(record["replacement_stem_audio"]) if record.get("replacement_stem_audio") else None)
+    target_wave = load_audio(target_path, wave.shape[-1], sf, torchaudio)
     wave = wave[:, : 32000 * 4]
     device = torch.device(args.device)
     processor = AutoProcessor.from_pretrained("facebook/musicgen-small", local_files_only=True)
@@ -54,8 +66,10 @@ def main() -> int:
     model = normalize_decoder_start_token(model).to(device)
     inputs = processor(audio=wave.squeeze(0).numpy(), sampling_rate=32000, text=[record["instruction"]], return_tensors="pt")
     inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
+    target_inputs = processor(audio=target_wave.squeeze(0).numpy(), sampling_rate=32000, text=[record["instruction"]], return_tensors="pt")
+    target_inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in target_inputs.items()}
     with torch.no_grad():
-        codes = model.base_model.model.audio_encoder(**{key: inputs[key] for key in ("input_values", "padding_mask") if key in inputs}).audio_codes
+        codes = model.base_model.model.audio_encoder(**{key: target_inputs[key] for key in ("input_values", "padding_mask") if key in target_inputs}).audio_codes
     labels = codes[0].permute(0, 2, 1).contiguous()
     optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad), lr=1e-4)
     losses = []
@@ -71,7 +85,6 @@ def main() -> int:
     print(json.dumps({"event": "phase", "phase": "generating"}), flush=True)
     with torch.no_grad():
         generated = model.generate(**inputs, max_new_tokens=256)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
     source_path = args.output_dir / "source.wav"
     generated_path = args.output_dir / "generated_edit.wav"
     sf.write(source_path, wave.squeeze(0).detach().cpu().numpy(), 32000)
