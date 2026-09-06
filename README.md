@@ -17,6 +17,16 @@ The primary research question is whether preference optimization improves the ba
 
 The project will use Instruct-MusicGen as the principal reference direction; other systems remain literature context rather than parallel implementations.
 
+## Runtime strategy
+
+The training code is designed to be portable, but the execution environments differ:
+
+- **Local M1 development and training:** run Python natively on macOS so PyTorch can access Apple MPS. Keep the BabySlakh/Slakh audio outside the repository, and use the Dockerized MLflow service for experiment tracking.
+- **Cloud GPU training:** run the same code in Docker with the NVIDIA override: `make cloud-test` or the GPU Compose configuration. Cloud runs use CUDA and are the place for larger ablations.
+- **Docker on macOS:** use it for tests, validation, data-manifest preparation, and MLflow. Docker’s Linux VM should not be assumed to provide MPS access to the host GPU.
+
+Run `make device` to inspect the accelerator visible inside Docker. A future native macOS training environment will perform the corresponding MPS check outside Docker before loading MusicGen.
+
 ## Repository layout
 
 ```text
