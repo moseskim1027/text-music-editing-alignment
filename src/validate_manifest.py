@@ -37,6 +37,12 @@ def summarize(path: Path) -> dict:
     duplicate_ids = sorted({item for item in ids if ids.count(item) > 1})
     if duplicate_ids:
         raise ValueError(f"duplicate example_id values: {duplicate_ids}")
+    sources_by_split = {}
+    for record in records:
+        sources_by_split.setdefault(record["source_audio"], set()).add(record["split"])
+    leaked_sources = sorted(source for source, splits in sources_by_split.items() if len(splits) > 1)
+    if leaked_sources:
+        raise ValueError(f"source audio appears in multiple splits: {leaked_sources}")
     return {
         "records": len(records),
         "by_operation": dict(sorted(Counter(r["operation"] for r in records).items())),

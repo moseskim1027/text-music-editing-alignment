@@ -26,7 +26,9 @@ class ManifestTests(unittest.TestCase):
         return Path(handle.name)
 
     def test_summary_counts_records(self):
-        path = self.write([record("one"), record("two", "add", "train")])
+        second = record("two", "add", "train")
+        second["source_audio"] = "other-source.wav"
+        path = self.write([record("one"), second])
         self.assertEqual(summarize(path), {
             "records": 2,
             "by_operation": {"add": 1, "remove": 1},
@@ -40,6 +42,10 @@ class ManifestTests(unittest.TestCase):
     def test_rejects_unknown_operation(self):
         with self.assertRaisesRegex(ValueError, "unsupported operation"):
             summarize(self.write([record(operation="mix")]))
+
+    def test_rejects_source_split_leakage(self):
+        with self.assertRaisesRegex(ValueError, "multiple splits"):
+            summarize(self.write([record("one", split="train"), record("two", "add", "test") | {"source_audio": "source.wav"}]))
 
 
 if __name__ == "__main__":
