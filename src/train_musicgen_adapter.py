@@ -55,6 +55,7 @@ def main() -> int:
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--device", default="mps", choices=("mps", "cuda", "cpu"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/runs/latest"))
+    parser.add_argument("--duration-seconds", type=float, default=10.0)
     args = parser.parse_args()
     import soundfile as sf
     import torchaudio
@@ -70,14 +71,15 @@ def main() -> int:
     else:
         records = records[: max(1, args.limit)]
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    wave = load_audio(Path(record["source_audio"]), 32000 * 4, sf, torchaudio)
+    target_samples = int(32000 * args.duration_seconds)
+    wave = load_audio(Path(record["source_audio"]), target_samples, sf, torchaudio)
     target_path = Path(record["target_audio"])
     if not target_path.exists():
         from build_edit_targets import render_target
         target_path = args.output_dir / "reference_target.wav"
         render_target(Path(record["source_audio"]), resolve_target_stem(record), target_path, record["operation"], Path(record["replacement_stem_audio"]) if record.get("replacement_stem_audio") else None)
     target_wave = load_audio(target_path, wave.shape[-1], sf, torchaudio)
-    wave = wave[:, : 32000 * 4]
+    wave = wave[:, :target_samples]
     device = torch.device(args.device)
     processor = AutoProcessor.from_pretrained("facebook/musicgen-small", local_files_only=True)
     model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-small", local_files_only=True)
@@ -117,7 +119,7 @@ def main() -> int:
     model.eval()
     print(json.dumps({"event": "phase", "phase": "generating"}), flush=True)
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=256)
+        generated = model.generate(**inputs, max_new_tokens=max(256, int(args.duration_seconds * 50)))
     source_path = args.output_dir / "source.wav"
     generated_path = args.output_dir / "generated_edit.wav"
     sf.write(source_path, wave.squeeze(0).detach().cpu().numpy(), 32000)
