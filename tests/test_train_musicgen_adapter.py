@@ -20,3 +20,8 @@ class MusicGenAdapterTests(unittest.TestCase):
         wrapper = SimpleNamespace(config=SimpleNamespace(), get_base_model=lambda: base)
         normalize_decoder_start_token(wrapper)
         self.assertEqual(base.config.decoder_start_token_id, 2048)
+
+    def test_decoder_bos_is_fallback(self):
+        model = SimpleNamespace(config=SimpleNamespace(decoder=SimpleNamespace(bos_token_id=2048)))
+        normalize_decoder_start_token(model)
+        self.assertEqual(model.config.decoder_start_token_id, 2048)
