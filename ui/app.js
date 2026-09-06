@@ -20,8 +20,13 @@ $("run").addEventListener("click", () => {
 })
 
 $("start").addEventListener("click", async () => {
+  $("start").disabled = true
   try {
-    await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: $("payload").textContent})
+    const response = await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: $("payload").textContent})
+    if (!response.ok) {
+      const body = await response.json()
+      throw new Error(body.detail || "Training could not be started")
+    }
     $("run-state").textContent = "RUNNING"
     const timer = setInterval(async () => {
       const status = await fetch(`${API}/experiments/status`).then((r) => r.json())
@@ -29,7 +34,7 @@ $("start").addEventListener("click", async () => {
       $("step").textContent = `${status.step} / ${status.steps}`
       $("edit-loss").textContent = status.loss === undefined ? "—" : status.loss.toFixed(4)
       $("progress-bar").style.width = status.steps ? `${100 * status.step / status.steps}%` : "0%"
-      if (status.status !== "running") clearInterval(timer)
+      if (status.status !== "running") { clearInterval(timer); $("start").disabled = false }
     }, 1000)
-  } catch (error) { $("message").textContent = error.message }
+  } catch (error) { $("message").textContent = error.message; $("start").disabled = false }
 })
