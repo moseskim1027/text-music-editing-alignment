@@ -76,7 +76,8 @@ evaluate:
 prepare-data:
 	@dataset_root="$${DATASET_ROOT:?set DATASET_ROOT}"; \
 	output="$${SUBSET:-data/derived.jsonl}"; \
-	output_dir="$$(dirname "$$output")"; \
+	output_dir="$$(cd "$$(dirname "$$output")" && pwd)"; \
+	output="$$output_dir/$$(basename "$$output")"; \
 	docker compose run --rm \
 		-v "$$dataset_root:$$dataset_root:ro" \
 		-v "$$output_dir:$$output_dir" \
