@@ -42,6 +42,8 @@ $("start").addEventListener("click", async () => {
       if (status.status === "completed") {
         $("message").textContent = "Training completed. Audio and evaluation artifacts will appear when produced by the run."
         $("mlflow-link").classList.remove("hidden")
+        $("evaluation-status").textContent = "COMPLETE"
+        $("evaluation-status").classList.add("success")
         const evaluation = status.result?.evaluation || {}
         setText("adherence", evaluation.adherence_proxy === undefined ? "—" : evaluation.adherence_proxy.toFixed(3))
         setText("preservation", evaluation.preservation_proxy === undefined ? "—" : evaluation.preservation_proxy.toFixed(3))
