@@ -5,15 +5,17 @@ An experimental research repository for editing music with natural-language inst
 
 ## Research scope
 
-Initial directions:
+This project focuses on **preservation-aware preference alignment for text-guided music editing**. Given source music and a natural-language instruction, we will adapt a pretrained MusicGen-small-style editor with lightweight adapters so that it performs the requested stem edit while preserving non-target musical content.
 
-- **Instruct-MusicGen** — instruction-conditioned music editing and generation.
-- **SAO-Instruct** — instruction following for sound and music transformation.
-- **Stable Audio Control** — controllable generation and edit-oriented conditioning.
-- **InstructME** — multimodal/instruction-guided music editing.
-- **MMEdit** — multimodal editing, preservation, and controllability.
+The initial benchmark is intentionally narrow:
 
-We will study improvements in optimization methods, adapter and parameter-efficient training, edit preservation, prompt adherence, perceptual sound quality, and human-preference alignment.
+- **Add** one stem, such as “add a guitar part.”
+- **Remove** one stem, such as “remove the vocals.”
+- **Replace** one stem, such as “replace the piano with strings.”
+
+The primary research question is whether preference optimization improves the balance between edit strength and preservation without requiring full-model training. The first implementation will use LoRA/adapters and short 4–8 second clips, making local experimentation possible on a 16 GB Apple-silicon machine. Larger confirmatory runs can use a cloud GPU.
+
+The project will use Instruct-MusicGen as the principal reference direction; other systems remain literature context rather than parallel implementations.
 
 ## Repository layout
 
@@ -55,4 +57,7 @@ For each metric, the protocol will specify the evaluator version, audio normaliz
 
 ## Status
 
-The initial repository tree and research evaluation framework are established. Subsequent capabilities will be documented here as they become reproducible.
+- **Repository scaffolding** — initial tree, scope, metrics, and reproducibility conventions established.
+- **Preservation-aware alignment scope** — narrowed to three stem edits, adapter training, pairwise preferences, and joint edit/preservation evaluation.
+
+The next implementation milestone is a reproducible benchmark manifest and baseline inference pipeline.
