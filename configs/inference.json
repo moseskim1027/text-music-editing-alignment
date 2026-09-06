@@ -1,0 +1,7 @@
+{
+  "model": "facebook/musicgen-small",
+  "device": "auto",
+  "duration_seconds": 8,
+  "sample_rate": 32000,
+  "output_dir": "outputs/baseline"
+}
