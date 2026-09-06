@@ -47,7 +47,7 @@ def preview(request: ExperimentRequest) -> dict:
 
 def _run_training(request: ExperimentRequest) -> None:
     try:
-        run_state.update(status="running", step=0, steps=request.steps, result=None)
+        run_state.update(status="running", phase="training", step=0, steps=request.steps, result=None)
         process = subprocess.Popen(
             [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--steps", str(request.steps), "--device", request.device],
             stdout=subprocess.PIPE,
@@ -68,10 +68,11 @@ def _run_training(request: ExperimentRequest) -> None:
         output = "".join(output_lines)
         if process.returncode:
             raise RuntimeError(error[-2000:] or "training worker failed")
+        run_state.update(phase="generating")
         run_state["result"] = {"output": output}
-        run_state.update(status="completed", step=request.steps)
+        run_state.update(status="completed", phase="completed", step=request.steps)
     except Exception as exc:
-        run_state.update(status="failed", result={"error": str(exc)})
+        run_state.update(status="failed", phase="failed", result={"error": str(exc)})
 
 
 @app.post("/experiments/start")

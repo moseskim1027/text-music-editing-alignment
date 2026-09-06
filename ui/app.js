@@ -35,7 +35,7 @@ $("start").addEventListener("click", async () => {
     $("run-state").textContent = "RUNNING"
     const timer = setInterval(async () => {
       const status = await fetch(`${API}/experiments/status`).then((r) => r.json())
-      $("run-state").textContent = status.status.toUpperCase()
+      $("run-state").textContent = (status.phase || status.status).toUpperCase()
       $("step").textContent = `${status.step} / ${status.steps}`
       $("edit-loss").textContent = status.loss === undefined ? "—" : status.loss.toFixed(4)
       const result = status.result || {}
@@ -43,7 +43,8 @@ $("start").addEventListener("click", async () => {
         $("message").textContent = "Training completed. Audio and evaluation artifacts will appear when produced by the run."
         $("mlflow-link").classList.remove("hidden")
       }
-      $("progress-bar").style.width = status.steps ? `${100 * status.step / status.steps}%` : "0%"
+      const progress = status.status === "completed" ? 100 : status.phase === "generating" ? 95 : (status.steps ? 90 * status.step / status.steps : 0)
+      $("progress-bar").style.width = `${progress}%`
       if (status.status !== "running") { clearInterval(timer); $("start").disabled = false }
     }, 1000)
   } catch (error) { $("message").textContent = error.message; $("start").disabled = false }
