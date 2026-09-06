@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from threading import Thread
 import json
 import subprocess
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field
 from src.check_device import probe
 
 app = FastAPI(title="Music Edit Lab API", version="0.1.0")
+app.mount("/artifacts", StaticFiles(directory="outputs", check_dir=False), name="artifacts")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8080"], allow_methods=["GET", "POST"], allow_headers=["*"])
 run_state = {"status": "idle", "step": 0, "steps": 0, "result": None}
 

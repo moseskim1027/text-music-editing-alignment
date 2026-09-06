@@ -42,6 +42,14 @@ $("start").addEventListener("click", async () => {
       if (status.status === "completed") {
         $("message").textContent = "Training completed. Audio and evaluation artifacts will appear when produced by the run."
         $("mlflow-link").classList.remove("hidden")
+        const output = status.result?.output || ""
+        const match = output.match(/"artifacts"\s*:\s*\{[\s\S]*?"source_audio"\s*:\s*"([^"]+)"[\s\S]*?"generated_audio"\s*:\s*"([^"]+)"/)
+        if (match) {
+          const artifactUrl = (path) => `${API}/artifacts/${path.replace(/^outputs[\\/]/, "").replaceAll("\\\\", "/")}`
+          $("source-audio").src = artifactUrl(match[1])
+          $("generated-audio").src = artifactUrl(match[2])
+          $("audio-status").textContent = "Generated artifacts are ready for playback."
+        }
       }
       const progress = status.status === "completed" ? 100 : status.phase === "generating" ? 95 : (status.steps ? 90 * status.step / status.steps : 0)
       $("progress-bar").style.width = `${progress}%`
