@@ -110,6 +110,8 @@ Run `make smoke-train` to exercise device selection and a 10-step adapter-only o
 
 Run `make musicgen-check` to verify access to `facebook/musicgen-small` and its processor without loading model weights. The checkpoint preflight deliberately precedes real training because plain MusicGen is text-to-music; the source-audio editing conditioning path must be validated before adapter optimization.
 
+Run `make musicgen-train` from the native MPS environment for the first bounded MusicGen LoRA reconstruction smoke test. It uses one four-second manifest example and ten steps; this validates gradient flow and memory behavior, while preference-target construction remains a subsequent research step.
+
 For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
 Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment. `make evaluate` uses the `text-music-editing-alignment-local` experiment by default (`MLFLOW_EXPERIMENT=...` overrides it).
