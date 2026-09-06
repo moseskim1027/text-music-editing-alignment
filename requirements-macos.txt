@@ -1,0 +1,7 @@
+# Native Apple-silicon development/training environment.
+# Keep this separate from the Linux Docker image: Docker cannot expose host MPS.
+torch==2.6.0
+torchaudio==2.6.0
+transformers==4.49.0
+safetensors==0.5.3
+soundfile==0.13.1

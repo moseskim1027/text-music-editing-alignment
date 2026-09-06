@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -7,6 +7,8 @@ help:
 		'make test        Run the complete test suite in Docker' \
 		'make cloud-test  Run tests with the NVIDIA GPU Compose override' \
 		'make device      Report CUDA/MPS/CPU availability' \
+		'make native-install  Create the native macOS training environment' \
+		'make native-device   Check MPS from native Python' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -27,6 +29,16 @@ cloud-test:
 # Report available accelerators inside the reproducible research container.
 device:
 	docker compose run --rm research python src/check_device.py
+
+# Create the native macOS virtual environment used for local MPS work.
+native-install:
+	python3 -m venv .venv-macos
+	.venv-macos/bin/python -m pip install --upgrade pip
+	.venv-macos/bin/pip install -r requirements-macos.txt
+
+# Check accelerators from native macOS Python, where MPS can be visible.
+native-device:
+	.venv-macos/bin/python src/check_device.py
 
 # Start MLflow in the background; override MLFLOW_PORT if 5000 is occupied.
 mlflow:
