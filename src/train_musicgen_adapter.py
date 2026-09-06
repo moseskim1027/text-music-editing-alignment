@@ -33,6 +33,19 @@ def load_audio(path: Path, target_samples: int, sf, torchaudio) -> torch.Tensor:
     return wave[:, :target_samples]
 
 
+def resolve_target_stem(record: dict) -> Path:
+    explicit = record.get("target_stem_audio")
+    if explicit:
+        return Path(explicit)
+    source = Path(record["source_audio"])
+    stem = record.get("target_stem", "")
+    candidates = [source.parent / "stems" / f"{stem}{extension}" for extension in (".wav", ".flac")]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise KeyError("target_stem_audio is missing and no matching stem file was found")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", type=Path, default=Path("data/derived.jsonl"), nargs="?")
@@ -57,7 +70,7 @@ def main() -> int:
     if not target_path.exists():
         from build_edit_targets import render_target
         target_path = args.output_dir / "reference_target.wav"
-        render_target(Path(record["source_audio"]), Path(record["target_stem_audio"]), target_path, record["operation"], Path(record["replacement_stem_audio"]) if record.get("replacement_stem_audio") else None)
+        render_target(Path(record["source_audio"]), resolve_target_stem(record), target_path, record["operation"], Path(record["replacement_stem_audio"]) if record.get("replacement_stem_audio") else None)
     target_wave = load_audio(target_path, wave.shape[-1], sf, torchaudio)
     wave = wave[:, : 32000 * 4]
     device = torch.device(args.device)
