@@ -83,3 +83,5 @@ The audio sourcing, split, annotation, and leakage controls are specified in `do
 The metadata-only provenance example is in `data/registry.example.jsonl`; validate a private registry with `src/validate_registry.py` before creating benchmark manifests.
 
 MLflow tracking is available through Docker Compose. Start it with `docker compose up mlflow`, then open `http://localhost:5000`. Training scripts can use `src/mlflow_tracking.py` to log configuration, run metadata, metrics, and selected artifacts to the local SQLite-backed server.
+
+Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment.
