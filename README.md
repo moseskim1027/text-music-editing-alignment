@@ -102,6 +102,8 @@ Run `make device` to report accelerator availability inside Docker before traini
 
 For native M1 setup, run `make native-install` once, then `make native-device`. The installer uses the official PyPI index to obtain the arm64 wheels. The probe reports macOS GPU/Metal visibility separately from PyTorch MPS runtime availability. If macOS reports Metal but MPS is unavailable, run the command from a native terminal rather than Docker or a restricted shell. The pinned native dependencies are in `requirements-macos.txt`; the environment is ignored by Git. If an older venv already exists, rerun `make native-install` rather than installing with its old pip command.
 
+The compact experiment dashboard is available with `make ui` at `http://localhost:8080`. It previews the shared experiment contract (manifest, edit instruction, adapter settings, device, and MLflow endpoint) without moving audio data into Git. Training execution will consume this same contract in the next UI milestone.
+
 For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
 Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment. `make evaluate` uses the `text-music-editing-alignment-local` experiment by default (`MLFLOW_EXPERIMENT=...` overrides it).

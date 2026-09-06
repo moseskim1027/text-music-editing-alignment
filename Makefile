@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device native-install native-device mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device ui mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -9,6 +9,7 @@ help:
 		'make device      Report CUDA/MPS/CPU availability' \
 		'make native-install  Create the native macOS training environment' \
 		'make native-device   Check MPS from native Python' \
+		'make ui       Start the compact experiment dashboard on port 8080' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -44,6 +45,11 @@ native-device:
 mlflow:
 	docker compose up -d --build mlflow
 	docker compose ps mlflow
+
+# Start the read-only experiment dashboard; override UI_PORT if needed.
+ui:
+	docker compose up -d --build ui
+	docker compose ps ui
 
 # Validate the checked-in metadata-only benchmark fixture.
 validate:
