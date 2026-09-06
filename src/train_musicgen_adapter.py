@@ -36,6 +36,8 @@ def load_audio(path: Path, target_samples: int, sf, torchaudio) -> torch.Tensor:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", type=Path, default=Path("data/derived.jsonl"), nargs="?")
+    parser.add_argument("--example-id", default="")
+    parser.add_argument("--instruction", default="")
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--device", default="mps", choices=("mps", "cuda", "cpu"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/runs/latest"))
@@ -45,7 +47,10 @@ def main() -> int:
     from peft import LoraConfig, get_peft_model
     from transformers import AutoProcessor, MusicgenForConditionalGeneration
 
-    record = json.loads(args.manifest.read_text().splitlines()[0])
+    records = [json.loads(line) for line in args.manifest.read_text().splitlines() if line.strip()]
+    record = next((item for item in records if item.get("example_id") == args.example_id), records[0])
+    if args.instruction:
+        record["instruction"] = args.instruction
     args.output_dir.mkdir(parents=True, exist_ok=True)
     wave = load_audio(Path(record["source_audio"]), 32000 * 4, sf, torchaudio)
     target_path = Path(record["target_audio"])

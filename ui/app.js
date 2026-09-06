@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id)
 const setText = (id, value) => { const element = $(id); if (element) element.textContent = value }
 const API = "http://localhost:8000"
-const currentPayload = () => ({manifest: $("manifest").value, operation: $("operation").value, instruction: $("instruction").value.trim(), adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"})
+const currentPayload = () => ({manifest: $("manifest").value, example_id: $("example-id").value.trim() || null, operation: $("operation").value, instruction: $("instruction").value.trim(), adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"})
 
 fetch(`${API}/device`).then((response) => response.json()).then((device) => {
   setText("device-name", `${device.recommended.toUpperCase()} ${device[device.recommended] ? "ready" : "fallback"}`)
