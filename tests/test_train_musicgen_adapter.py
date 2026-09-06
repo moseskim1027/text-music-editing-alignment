@@ -25,3 +25,4 @@ class MusicGenAdapterTests(unittest.TestCase):
         model = SimpleNamespace(config=SimpleNamespace(decoder=SimpleNamespace(bos_token_id=2048)))
         normalize_decoder_start_token(model)
         self.assertEqual(model.config.decoder_start_token_id, 2048)
+        self.assertEqual(model.config.decoder.decoder_start_token_id, 2048)
