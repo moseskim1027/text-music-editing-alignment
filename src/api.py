@@ -12,7 +12,7 @@ from src.check_device import probe
 
 app = FastAPI(title="Music Edit Lab API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8080"], allow_methods=["GET", "POST"], allow_headers=["*"])
-run_state = {"status": "idle", "step": 0, "steps": 0, "result": None}
+run_state = {"status": "idle", "step": 0, "steps": 0, "loss_history": [], "result": None}
 
 
 class ExperimentRequest(BaseModel):
@@ -47,7 +47,7 @@ def preview(request: ExperimentRequest) -> dict:
 
 def _run_training(request: ExperimentRequest) -> None:
     try:
-        run_state.update(status="running", step=0, steps=request.steps, result=None)
+        run_state.update(status="running", step=0, steps=request.steps, loss_history=[], result=None)
         process = subprocess.Popen(
             [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--steps", str(request.steps), "--device", request.device],
             stdout=subprocess.PIPE,
@@ -60,7 +60,8 @@ def _run_training(request: ExperimentRequest) -> None:
             try:
                 event = json.loads(line)
                 if event.get("event") == "progress":
-                    run_state.update(step=event["step"], steps=event["steps"], loss=event["loss"])
+                    history = [*run_state["loss_history"], {"step": event["step"], "loss": event["loss"]}]
+                    run_state.update(step=event["step"], steps=event["steps"], loss=event["loss"], loss_history=history)
             except (ValueError, TypeError, KeyError):
                 continue
         error = process.stderr.read() if process.stderr else ""
