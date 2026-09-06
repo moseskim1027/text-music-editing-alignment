@@ -25,8 +25,8 @@ def build_records(dataset_root: Path, output_root: str = "data/derived") -> list
                 stem_name = stem.stem
                 base = f"{track.name}_{stem_name}"
                 records.extend([
-                    {"example_id": f"{base}_remove", "source_audio": str(mix), "instruction": f"Remove the {stem_name} stem", "operation": "remove", "target_stem": stem_name, "target_audio": f"{output_root}/{split}/{base}_remove.wav", "untouched_stems": [s.stem for s in stems if s != stem], "split": split},
-                    {"example_id": f"{base}_add", "source_audio": str(mix), "instruction": f"Add a {stem_name} part", "operation": "add", "target_stem": stem_name, "target_audio": f"{output_root}/{split}/{base}_add.wav", "untouched_stems": [s.stem for s in stems], "split": split},
+                    {"example_id": f"{base}_remove", "source_audio": str(mix), "instruction": f"Remove the {stem_name} stem", "operation": "remove", "target_stem": stem_name, "target_stem_audio": str(stem), "target_audio": f"{output_root}/{split}/{base}_remove.wav", "untouched_stems": [s.stem for s in stems if s != stem], "split": split},
+                    {"example_id": f"{base}_add", "source_audio": str(mix), "instruction": f"Add a {stem_name} part", "operation": "add", "target_stem": stem_name, "target_stem_audio": str(stem), "target_audio": f"{output_root}/{split}/{base}_add.wav", "untouched_stems": [s.stem for s in stems], "split": split},
                 ])
     return records
 
