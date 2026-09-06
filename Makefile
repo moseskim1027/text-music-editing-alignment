@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device native-install native-device ui api smoke-train mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device ui api smoke-train musicgen-check mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -12,6 +12,7 @@ help:
 		'make ui       Start the compact experiment dashboard on port 8080' \
 		'make api      Start the experiment control API on port 8000' \
 		'make smoke-train Run the tiny adapter/device smoke test' \
+		'make musicgen-check Check MusicGen-small config/tokenizer access' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -61,6 +62,10 @@ api:
 # Exercise device selection and an adapter-only optimization loop.
 smoke-train:
 	docker compose run --build --rm research python src/train_adapter.py --steps "$${STEPS:-10}" --device "$${DEVICE:-auto}"
+
+# Check the MusicGen checkpoint without downloading model weights.
+musicgen-check:
+	.venv-macos/bin/python src/check_musicgen.py --model "$${MODEL_ID:-facebook/musicgen-small}"
 
 # Validate the checked-in metadata-only benchmark fixture.
 validate:
