@@ -13,8 +13,10 @@ logging.set_verbosity_error()
 
 def normalize_decoder_start_token(model):
     """Bridge the nested MusicGen config used by Transformers 4.49."""
-    if getattr(model.config, "decoder_start_token_id", None) is None:
-        model.config.decoder_start_token_id = model.config.decoder.decoder_start_token_id
+    base = model.get_base_model() if hasattr(model, "get_base_model") else model
+    config = base.config
+    if getattr(config, "decoder_start_token_id", None) is None:
+        config.decoder_start_token_id = config.decoder.decoder_start_token_id
     return model
 
 
@@ -40,11 +42,12 @@ def main() -> int:
     device = torch.device(args.device)
     processor = AutoProcessor.from_pretrained("facebook/musicgen-small", local_files_only=True)
     model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-small", local_files_only=True)
-    model = normalize_decoder_start_token(model).to(device)
+    model = normalize_decoder_start_token(model)
     model.audio_encoder.eval()
     for parameter in model.audio_encoder.parameters():
         parameter.requires_grad_(False)
     model = get_peft_model(model, LoraConfig(r=8, lora_alpha=16, target_modules=["q_proj", "v_proj"], lora_dropout=0.05))
+    model = normalize_decoder_start_token(model).to(device)
     inputs = processor(audio=wave.squeeze(0).numpy(), sampling_rate=32000, text=[record["instruction"]], return_tensors="pt")
     inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
     with torch.no_grad():

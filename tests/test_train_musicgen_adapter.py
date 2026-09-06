@@ -14,3 +14,9 @@ class MusicGenAdapterTests(unittest.TestCase):
         model = SimpleNamespace(config=SimpleNamespace(decoder_start_token_id=7, decoder=SimpleNamespace(decoder_start_token_id=2048)))
         normalize_decoder_start_token(model)
         self.assertEqual(model.config.decoder_start_token_id, 7)
+
+    def test_wrapped_base_model_config_is_normalized(self):
+        base = SimpleNamespace(config=SimpleNamespace(decoder=SimpleNamespace(decoder_start_token_id=2048)))
+        wrapper = SimpleNamespace(config=SimpleNamespace(), get_base_model=lambda: base)
+        normalize_decoder_start_token(wrapper)
+        self.assertEqual(base.config.decoder_start_token_id, 2048)
