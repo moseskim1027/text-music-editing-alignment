@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+data/raw/
+data/processed/
+outputs/
+checkpoints/
+wandb/
+*.wav
+*.mp3
+*.flac
