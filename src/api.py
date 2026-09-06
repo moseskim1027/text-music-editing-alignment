@@ -22,6 +22,7 @@ class ExperimentRequest(BaseModel):
     manifest: str
     example_id: str | None = None
     example_limit: int = Field(default=1, ge=1, le=10000)
+    duration_seconds: float = Field(default=10.0, ge=1.0, le=30.0)
     operation: str = Field(pattern="^(add|remove|replace)$")
     instruction: str = Field(min_length=1, max_length=2000)
     adapter_rank: int = Field(default=8, ge=1, le=64)
@@ -54,7 +55,7 @@ def _run_training(request: ExperimentRequest) -> None:
     try:
         run_state.update(status="running", phase="training", step=0, steps=request.steps, result=None)
         process = subprocess.Popen(
-            [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--example-id", request.example_id or "", "--instruction", request.instruction, "--limit", str(request.example_limit), "--steps", str(request.steps), "--device", request.device],
+            [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--example-id", request.example_id or "", "--instruction", request.instruction, "--limit", str(request.example_limit), "--duration-seconds", str(request.duration_seconds), "--steps", str(request.steps), "--device", request.device],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
