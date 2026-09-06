@@ -14,7 +14,7 @@ help:
 		'make api-native Start the API with native MPS access' \
 		'make smoke-train Run the tiny adapter/device smoke test' \
 		'make musicgen-check Check MusicGen-small config/tokenizer access' \
-		'make musicgen-train Run the tiny native MusicGen LoRA smoke test' \
+		'make musicgen-train Run labeled native MusicGen LoRA training' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -73,7 +73,7 @@ smoke-train:
 musicgen-check:
 	.venv-macos/bin/python src/check_musicgen.py --model "$${MODEL_ID:-facebook/musicgen-small}"
 
-# Run one 4-second example through the native MPS LoRA training path.
+# Run labeled examples through the native MPS LoRA training path.
 musicgen-train:
 	.venv-macos/bin/python src/train_musicgen_adapter.py "$${MANIFEST:-data/derived.jsonl}" --steps "$${STEPS:-10}" --device "$${DEVICE:-mps}"
 
