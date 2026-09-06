@@ -1,0 +1,3 @@
+{"example_id":"example_remove_vocals","source_audio":"/path/to/audio/example_remove_vocals.wav","instruction":"Remove the vocals while preserving the drums and bass","operation":"remove","target_stem":"vocals","untouched_stems":["drums","bass"],"split":"test"}
+{"example_id":"example_add_guitar","source_audio":"/path/to/audio/example_add_guitar.wav","instruction":"Add a clean electric guitar part","operation":"add","target_stem":"guitar","untouched_stems":["drums","bass","vocals"],"split":"test"}
+{"example_id":"example_replace_piano","source_audio":"/path/to/audio/example_replace_piano.wav","instruction":"Replace the piano with strings","operation":"replace","target_stem":"piano","untouched_stems":["drums","bass"],"split":"test"}

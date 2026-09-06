@@ -71,3 +71,5 @@ Evaluation aggregation is available at `src/evaluate.py`. It consumes per-exampl
 Pairwise alignment data is validated by `src/validate_preferences.py`, which checks the preference label, candidate distinction, criteria, required metadata, and produces label-balance summaries.
 
 The adapter-training plan and M1/16 GB starting configuration are documented in `docs/training_plan.md` and `configs/adapter_training.json`.
+
+Example metadata-only manifests are provided in `data/benchmark.example.jsonl` and `data/preferences.example.jsonl`. Replace the placeholder audio paths with locally licensed data; raw audio remains outside version control.
