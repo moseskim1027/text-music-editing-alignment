@@ -2,12 +2,16 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from threading import Thread
+import subprocess
+import sys
 from pydantic import BaseModel, Field
 
 from src.check_device import probe
 
 app = FastAPI(title="Music Edit Lab API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8080"], allow_methods=["GET", "POST"], allow_headers=["*"])
+run_state = {"status": "idle", "step": 0, "steps": 0, "result": None}
 
 
 class ExperimentRequest(BaseModel):
@@ -38,3 +42,34 @@ def preview(request: ExperimentRequest) -> dict:
     if request.device == "cuda" and not available["cuda"]:
         raise HTTPException(status_code=409, detail="CUDA is not available in this process")
     return {"valid": True, "experiment": request.model_dump()}
+
+
+def _run_training(request: ExperimentRequest) -> None:
+    try:
+        run_state.update(status="running", step=0, steps=request.steps, result=None)
+        process = subprocess.run(
+            [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--steps", str(request.steps), "--device", request.device],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if process.returncode:
+            raise RuntimeError(process.stderr[-2000:] or "training worker failed")
+        import json
+        run_state["result"] = json.loads(process.stdout)
+        run_state.update(status="completed", step=request.steps)
+    except Exception as exc:
+        run_state.update(status="failed", result={"error": str(exc)})
+
+
+@app.post("/experiments/start")
+def start(request: ExperimentRequest) -> dict:
+    if run_state["status"] == "running":
+        raise HTTPException(status_code=409, detail="An experiment is already running")
+    Thread(target=_run_training, args=(request,), daemon=True).start()
+    return {"accepted": True, "status": "running"}
+
+
+@app.get("/experiments/status")
+def experiment_status() -> dict:
+    return run_state

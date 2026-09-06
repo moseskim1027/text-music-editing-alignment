@@ -15,6 +15,21 @@ $("run").addEventListener("click", () => {
   const payload = {manifest: $("manifest").value, operation: $("operation").value, instruction, adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"}
   fetch(`${API}/experiments/preview`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(payload)})
     .then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.detail || "API validation failed"); return body })
-    .then((body) => { $("payload").textContent = JSON.stringify(body.experiment, null, 2); $("preview").classList.remove("hidden"); $("message").textContent = "API contract validated. Preview is ready." })
+    .then((body) => { $("payload").textContent = JSON.stringify(body.experiment, null, 2); $("preview").classList.remove("hidden"); $("start").disabled = false; $("message").textContent = "API contract validated. Preview is ready." })
     .catch((error) => { $("message").textContent = error.message })
+})
+
+$("start").addEventListener("click", () => { $("message").textContent = "Training launch is reserved for the next backend milestone." })
+$("start").addEventListener("click", async () => {
+  try {
+    await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: $("payload").textContent})
+    $("run-state").textContent = "RUNNING"
+    const timer = setInterval(async () => {
+      const status = await fetch(`${API}/experiments/status`).then((r) => r.json())
+      $("run-state").textContent = status.status.toUpperCase()
+      $("step").textContent = `${status.step} / ${status.steps}`
+      $("progress-bar").style.width = status.steps ? `${100 * status.step / status.steps}%` : "0%"
+      if (status.status !== "running") clearInterval(timer)
+    }, 1000)
+  } catch (error) { $("message").textContent = error.message }
 })

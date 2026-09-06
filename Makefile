@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device native-install native-device ui api smoke-train musicgen-check musicgen-train mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device ui api api-native smoke-train musicgen-check musicgen-train mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -11,6 +11,7 @@ help:
 		'make native-device   Check MPS from native Python' \
 		'make ui       Start the compact experiment dashboard on port 8080' \
 		'make api      Start the experiment control API on port 8000' \
+		'make api-native Start the API with native MPS access' \
 		'make smoke-train Run the tiny adapter/device smoke test' \
 		'make musicgen-check Check MusicGen-small config/tokenizer access' \
 		'make musicgen-train Run the tiny native MusicGen LoRA smoke test' \
@@ -59,6 +60,10 @@ ui:
 api:
 	docker compose up -d --build api
 	docker compose ps api
+
+# Start the API natively so it can launch the MPS MusicGen worker.
+api-native:
+	.venv-macos/bin/uvicorn src.api:app --host 0.0.0.0 --port "$${API_PORT:-8000}"
 
 # Exercise device selection and an adapter-only optimization loop.
 smoke-train:
