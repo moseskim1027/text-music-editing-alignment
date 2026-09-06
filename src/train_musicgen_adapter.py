@@ -15,11 +15,11 @@ def normalize_decoder_start_token(model):
     """Bridge the nested MusicGen config used by Transformers 4.49."""
     base = model.get_base_model() if hasattr(model, "get_base_model") else model
     config = base.config
+    if getattr(config.decoder, "decoder_start_token_id", None) is None:
+        config.decoder.decoder_start_token_id = config.decoder.bos_token_id
+    # Keep both locations populated for generation and supervised forward paths.
     if getattr(config, "decoder_start_token_id", None) is None:
-        config.decoder_start_token_id = (
-            getattr(config.decoder, "decoder_start_token_id", None)
-            or config.decoder.bos_token_id
-        )
+        config.decoder_start_token_id = config.decoder.decoder_start_token_id
     return model
 
 
