@@ -10,11 +10,16 @@ SPLITS = ("train", "validation", "test")
 
 def build_records(dataset_root: Path, output_root: str = "data/derived") -> list[dict]:
     records = []
-    for split in SPLITS:
-        for track in sorted((dataset_root / split).glob("Track*")):
-            mix = track / "mix.flac"
-            stems = sorted((track / "stems").glob("*.flac"))
-            if not mix.exists() or not stems:
+    has_official_splits = any((dataset_root / split).is_dir() for split in SPLITS)
+    track_groups = ((split, sorted((dataset_root / split).glob("Track*"))) for split in SPLITS) if has_official_splits else (
+        ("test" if int(track.name.removeprefix("Track")) % 10 == 0 else "validation" if int(track.name.removeprefix("Track")) % 10 == 1 else "train", [track])
+        for track in sorted(dataset_root.glob("Track*"))
+    )
+    for split, tracks in track_groups:
+        for track in tracks:
+            mix = next((track / f"mix{extension}" for extension in (".flac", ".wav") if (track / f"mix{extension}").exists()), None)
+            stems = sorted([* (track / "stems").glob("*.flac"), * (track / "stems").glob("*.wav")])
+            if mix is None or not stems:
                 continue
             for stem in stems:
                 stem_name = stem.stem
