@@ -2,9 +2,41 @@
 
 Research code for preservation-aware text-guided music editing. The prototype uses MusicGen-small with LoRA adapters and labeled add/remove/replace targets derived from a local Slakh/BabySlakh subset.
 
+The goal is to make a requested musical change while retaining the parts of the source that the instruction does not target. The repository covers the experimental path from manifest creation and deterministic target construction through adapter training, local inference, evaluation, and run tracking.
+
 ## Scope
 
 The research question is whether lightweight adapter training can satisfy a requested edit while preserving non-target musical content. Raw audio, model weights, checkpoints, generated audio, manifests, and MLflow state remain outside Git.
+
+This is a research prototype rather than a production audio editor. It currently focuses on short, mono, stem-based examples and three edit operations:
+
+- **Add:** introduce a target stem into the source mixture.
+- **Remove:** subtract a target stem while preserving the remaining mixture.
+- **Replace:** exchange one target stem for another.
+
+Target waveforms are built deterministically from source stems. MusicGen encodes the edit instruction, the pretrained base model remains frozen, and LoRA adapters provide the trainable parameters. Current adherence, preservation, and quality scores are useful experiment proxies, not comprehensive perceptual or semantic metrics.
+
+## How it fits together
+
+```text
+Slakh/BabySlakh stems
+        |
+        v
+metadata-only manifest --> deterministic source/target pairs
+        |                              |
+        +------------------------------+
+                       |
+                       v
+        MusicGen-small + LoRA training
+                       |
+                       v
+       generated audio + evaluation report
+                       |
+                       v
+              UI / API / MLflow
+```
+
+The manifest is the contract between data preparation, training, and evaluation. It identifies the source audio, edit instruction, operation, target stem, expected target audio, and data split. Keeping this metadata separate from licensed audio makes the code and example schemas shareable without redistributing the dataset.
 
 ## Layout
 
@@ -17,6 +49,15 @@ tests/     Dockerized test suite
 ui/        Compact experiment dashboard
 ```
 
+Notable entry points include `src/prepare_slakh_manifest.py` for dataset indexing, `src/train_musicgen_adapter.py` for labeled LoRA training, `src/evaluate_audio.py` for artifact-level evaluation, and `src/api.py` for experiment control.
+
+## Prerequisites
+
+- Docker with Compose for the reproducible test, API, UI, and MLflow services.
+- Python 3 and Apple Silicon for the native MPS workflow, or a CUDA-capable environment with the GPU Compose override.
+- A local, appropriately licensed Slakh/BabySlakh-style dataset.
+- A locally cached `facebook/musicgen-small` checkpoint for offline training.
+
 ## Quick start
 
 ```bash
@@ -26,6 +67,8 @@ make device
 ```
 
 Docker on macOS does not expose Apple MPS; use native Python for local M1/M2/M3 training.
+
+Useful commands are discoverable with `make help`. Run the GPU-backed test container on a compatible cloud host with `make cloud-test`.
 
 ## Prepare local data
 
@@ -44,6 +87,8 @@ docker compose run --rm research python src/validate_manifest.py data/derived.js
 ```
 
 Never commit the generated manifest or audio files.
+
+The checked-in files under `data/*.example.jsonl` document the expected schemas and support validation and evaluation tests without requiring the private dataset. See [the data protocol](docs/data_protocol.md) for provenance, split, licensing, and preference-annotation rules.
 
 ## Native MPS setup
 
@@ -71,6 +116,8 @@ For a small multi-example pool:
 ```
 
 The default UI example is `Track00001_S02_add` (S02 piano; S01 drums). Outputs are written under ignored `outputs/runs/latest/`.
+
+A run produces source and reference audio, the generated edit, and an evaluation JSON report. These artifacts are intentionally ignored because they may be large or derived from licensed source material.
 
 ## UI and API
 
@@ -134,6 +181,8 @@ Reports include 0–1 adherence, preservation, and quality audio proxies; higher
 | Preference Win Rate | Fraction of blind comparisons preferred over the baseline |
 
 Metrics must be reported jointly; higher adherence is not an improvement if preservation or quality decreases.
+
+For reproducible comparisons, keep the base checkpoint, preprocessing, decoding settings, data split, and random seed fixed. Report results by edit operation as well as in aggregate, and use held-out songs rather than stems from songs seen during training.
 
 ## Current capabilities
 
