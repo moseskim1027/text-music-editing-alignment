@@ -6,6 +6,30 @@ Research code for preservation-aware text-guided music editing. The prototype us
 
 The research question is whether lightweight adapter training can satisfy a requested edit while preserving non-target musical content. Raw audio, model weights, checkpoints, generated audio, manifests, and MLflow state remain outside Git.
 
+### Current project scope
+
+The prototype is intentionally limited to short, single-track experiments on a local Slakh/BabySlakh subset. It trains LoRA adapters on labeled source/target audio pairs for three operations: add, remove, and replace. The base MusicGen-small model remains frozen. The UI and API support local MPS runs, multi-example pools with batch size 1, generated audio artifacts, and evaluation reports.
+
+This repository is not yet a production editor or a complete alignment system. The current audio metrics are proxies, preference win rate requires human judgments, and larger-scale batching, stronger evaluators, and preference optimization remain future work.
+
+### Terminology
+
+| Term | Meaning |
+| --- | --- |
+| Stem | An isolated musical component, such as drums, piano, bass, or vocals. |
+| Mix | The combined audio waveform formed from multiple stems. |
+| Source audio | The input mix supplied to the editor. |
+| Target audio | The reference waveform produced by the requested edit operation. |
+| Edit instruction | Natural-language text describing the requested change. |
+| Add | Combine a source context with a selected stem to represent adding that part. |
+| Remove | Subtract the selected stem from the mix. |
+| Replace | Subtract one stem and add an explicitly supplied replacement stem. |
+| Preservation | Retention of musical content not selected for editing. |
+| Adapter / LoRA | A small trainable parameter update applied while the base model stays frozen. |
+| Audio codes | Discrete latent tokens produced by the model’s neural audio codec and used as training targets. |
+| Manifest | A JSONL metadata file that maps example IDs to audio paths, instructions, labels, and splits. |
+| MPS | Apple’s Metal Performance Shaders backend for PyTorch acceleration on Apple silicon. |
+
 ## Layout
 
 ```text
