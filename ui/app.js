@@ -33,7 +33,11 @@ $("start").addEventListener("click", async () => {
       $("run-state").textContent = status.status.toUpperCase()
       $("step").textContent = `${status.step} / ${status.steps}`
       $("edit-loss").textContent = status.loss === undefined ? "—" : status.loss.toFixed(4)
-      $("loss-history").textContent = status.loss_history?.length ? status.loss_history.map((point) => `step ${point.step}: ${Number(point.loss).toFixed(4)}`).join("\n") : "No loss events yet."
+      const result = status.result || {}
+      if (status.status === "completed") {
+        $("message").textContent = "Training completed. Audio and evaluation artifacts will appear when produced by the run."
+        $("mlflow-link").classList.remove("hidden")
+      }
       $("progress-bar").style.width = status.steps ? `${100 * status.step / status.steps}%` : "0%"
       if (status.status !== "running") { clearInterval(timer); $("start").disabled = false }
     }, 1000)
