@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device native-install native-device ui api mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device ui api smoke-train mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -11,6 +11,7 @@ help:
 		'make native-device   Check MPS from native Python' \
 		'make ui       Start the compact experiment dashboard on port 8080' \
 		'make api      Start the experiment control API on port 8000' \
+		'make smoke-train Run the tiny adapter/device smoke test' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -56,6 +57,10 @@ ui:
 api:
 	docker compose up -d --build api
 	docker compose ps api
+
+# Exercise device selection and an adapter-only optimization loop.
+smoke-train:
+	docker compose run --build --rm research python src/train_adapter.py --steps "$${STEPS:-10}" --device "$${DEVICE:-auto}"
 
 # Validate the checked-in metadata-only benchmark fixture.
 validate:
