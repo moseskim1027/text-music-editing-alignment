@@ -112,6 +112,8 @@ Deterministic target rendering is available at `src/build_edit_targets.py`. It s
 
 The edit-aware objective layer is available at `src/edit_losses.py`. It reports edit loss, preservation loss, and their weighted total separately so experiments can quantify the requested-edit versus untouched-content trade-off.
 
+The source-audio fusion primitive is available at `src/audio_fusion.py`. It projects pooled source-audio features into the text-conditioning dimension and prepends an audio prefix token; the model-specific encoder and MusicGen integration remain isolated in the training backend.
+
 Run `make smoke-train` to exercise device selection and a 10-step adapter-only optimization loop. This is a runtime smoke test, not MusicGen training; it confirms the native MPS/CUDA/CPU path before the licensed MusicGen backend is connected.
 
 Run `make musicgen-check` to verify access to `facebook/musicgen-small` and its processor without loading model weights. The checkpoint preflight deliberately precedes real training because plain MusicGen is text-to-music; the source-audio editing conditioning path must be validated before adapter optimization.
