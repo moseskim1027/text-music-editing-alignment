@@ -69,3 +69,5 @@ The repository is Dockerized for reproducible development and testing. Run `dock
 Evaluation aggregation is available at `src/evaluate.py`. It consumes per-example JSONL scores, reports overall and per-operation means, and computes preservation-adjusted edit success.
 
 Pairwise alignment data is validated by `src/validate_preferences.py`, which checks the preference label, candidate distinction, criteria, required metadata, and produces label-balance summaries.
+
+The adapter-training plan and M1/16 GB starting configuration are documented in `docs/training_plan.md` and `configs/adapter_training.json`.
