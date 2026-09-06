@@ -63,6 +63,8 @@ def _run_training(request: ExperimentRequest) -> None:
                 event = json.loads(line)
                 if event.get("event") == "progress":
                     run_state.update(step=event["step"], steps=event["steps"], loss=event["loss"])
+                elif event.get("event") == "phase":
+                    run_state.update(phase=event["phase"])
             except (ValueError, TypeError, KeyError):
                 continue
         error = process.stderr.read() if process.stderr else ""

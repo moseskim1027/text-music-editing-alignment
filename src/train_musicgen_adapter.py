@@ -68,6 +68,7 @@ def main() -> int:
         losses.append(float(loss.detach().cpu()))
         print(json.dumps({"event": "progress", "step": len(losses), "steps": args.steps, "loss": losses[-1]}), flush=True)
     model.eval()
+    print(json.dumps({"event": "phase", "phase": "generating"}), flush=True)
     with torch.no_grad():
         generated = model.generate(**inputs, max_new_tokens=256)
     args.output_dir.mkdir(parents=True, exist_ok=True)
