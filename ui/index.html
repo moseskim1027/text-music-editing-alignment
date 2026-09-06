@@ -12,7 +12,7 @@
       <section class="intro"><div><p class="eyebrow">EXPERIMENT CONTROL</p><h1>Run a focused edit experiment.</h1><p class="muted">Configure one reproducible run, then compare edit strength against what the source preserves.</p></div><div class="device"><span class="dot"></span><div><strong id="device-name">Checking device…</strong><small id="device-detail">API status</small></div></div></section>
       <div class="grid">
         <section class="card"><div class="card-head"><h2>Experiment</h2><span class="tag">DRY RUN</span></div>
-          <label>Dataset manifest<select id="manifest"><option>data/benchmark.example.jsonl</option><option>data/derived.jsonl</option></select></label>
+          <label>Dataset manifest<select id="manifest"><option>data/derived.jsonl</option><option>data/benchmark.example.jsonl</option></select></label>
           <label>Edit operation<select id="operation"><option>add</option><option>remove</option><option>replace</option></select></label>
           <label>Instruction<input id="instruction" value="Add a warm electric piano layer while preserving the drums." /></label>
           <div class="row"><label>Adapter rank<input id="rank" type="number" value="8" min="1" max="64" /></label><label>Steps<input id="steps" type="number" value="10" min="1" max="1000" /></label></div>

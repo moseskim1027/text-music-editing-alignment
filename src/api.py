@@ -77,6 +77,8 @@ def _run_training(request: ExperimentRequest) -> None:
 def start(request: ExperimentRequest) -> dict:
     if run_state["status"] == "running":
         raise HTTPException(status_code=409, detail="An experiment is already running")
+    if not __import__("pathlib").Path(request.manifest).exists():
+        raise HTTPException(status_code=400, detail=f"Manifest not found: {request.manifest}")
     Thread(target=_run_training, args=(request,), daemon=True).start()
     return {"accepted": True, "status": "running"}
 
