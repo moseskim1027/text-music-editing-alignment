@@ -1,0 +1,1 @@
+{"example_id":"example_remove_vocals","instruction":"Remove the vocals while preserving the drums and bass","candidate_a":"/path/to/outputs/example_remove_vocals_a.wav","candidate_b":"/path/to/outputs/example_remove_vocals_b.wav","preferred":"b","criteria":["requested_edit","untouched_content","audio_quality"],"annotator_id":"replace-with-hashed-id"}
