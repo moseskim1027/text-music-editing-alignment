@@ -81,3 +81,5 @@ Experiment metadata can be recorded with `src/record_run.py`; it captures hashes
 The audio sourcing, split, annotation, and leakage controls are specified in `docs/data_protocol.md`. Raw audio and stems are intentionally excluded from version control.
 
 The metadata-only provenance example is in `data/registry.example.jsonl`; validate a private registry with `src/validate_registry.py` before creating benchmark manifests.
+
+MLflow tracking is available through Docker Compose. Start it with `docker compose up mlflow`, then open `http://localhost:5000`. Training scripts can use `src/mlflow_tracking.py` to log configuration, run metadata, metrics, and selected artifacts to the local SQLite-backed server.

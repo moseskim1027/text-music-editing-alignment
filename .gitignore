@@ -10,6 +10,8 @@ data/processed/
 outputs/
 checkpoints/
 wandb/
+mlruns/
+mlflow.db
 *.wav
 *.mp3
 *.flac

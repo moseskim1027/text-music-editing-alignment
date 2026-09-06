@@ -1,2 +1,3 @@
 # Runtime dependencies are intentionally empty for the manifest milestone.
 # Add pinned packages here as model training capabilities are introduced.
+mlflow==3.6.0

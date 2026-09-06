@@ -7,3 +7,21 @@ services:
     volumes:
       - .:/workspace
     command: python -m unittest discover -s tests -v
+
+  mlflow:
+    build:
+      context: .
+    image: text-music-editing-alignment:mlflow
+    command: >-
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlartifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-db:/workspace/mlflow.db
+      - mlflow-artifacts:/mlartifacts
+
+volumes:
+  mlflow-db:
+  mlflow-artifacts:
