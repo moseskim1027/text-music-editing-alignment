@@ -67,3 +67,5 @@ The benchmark manifest validator is available at `src/validate_manifest.py`; it 
 The repository is Dockerized for reproducible development and testing. Run `docker compose build` followed by `docker compose run --rm research` to execute the test suite in the pinned Python environment. The default container runs as a non-root user, and local data/checkpoints are excluded from the image.
 
 Evaluation aggregation is available at `src/evaluate.py`. It consumes per-example JSONL scores, reports overall and per-operation means, and computes preservation-adjusted edit success.
+
+Pairwise alignment data is validated by `src/validate_preferences.py`, which checks the preference label, candidate distinction, criteria, required metadata, and produces label-balance summaries.
