@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id)
 const setText = (id, value) => { const element = $(id); if (element) element.textContent = value }
 const API = "http://localhost:8000"
+const currentPayload = () => ({manifest: $("manifest").value, operation: $("operation").value, instruction: $("instruction").value.trim(), adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"})
 
 fetch(`${API}/device`).then((response) => response.json()).then((device) => {
   setText("device-name", `${device.recommended.toUpperCase()} ${device[device.recommended] ? "ready" : "fallback"}`)
@@ -13,7 +14,7 @@ fetch(`${API}/device`).then((response) => response.json()).then((device) => {
 $("run").addEventListener("click", () => {
   const instruction = $("instruction").value.trim()
   if (!instruction) { $("message").textContent = "Add an instruction before previewing the run."; return }
-  const payload = {manifest: $("manifest").value, operation: $("operation").value, instruction, adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"}
+  const payload = currentPayload()
   fetch(`${API}/experiments/preview`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(payload)})
     .then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.detail || "API validation failed"); return body })
     .then((body) => { $("payload").textContent = JSON.stringify(body.experiment, null, 2); $("preview").classList.remove("hidden"); $("start").disabled = false; $("message").textContent = "API contract validated. Preview is ready." })
@@ -23,7 +24,10 @@ $("run").addEventListener("click", () => {
 $("start").addEventListener("click", async () => {
   $("start").disabled = true
   try {
-    const response = await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: $("payload").textContent})
+    const payload = currentPayload()
+    if (!payload.instruction) throw new Error("Add an instruction before starting training")
+    $("payload").textContent = JSON.stringify(payload, null, 2)
+    const response = await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(payload)})
     if (!response.ok) {
       const body = await response.json()
       throw new Error(body.detail || "Training could not be started")
