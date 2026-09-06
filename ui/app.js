@@ -19,7 +19,6 @@ $("run").addEventListener("click", () => {
     .catch((error) => { $("message").textContent = error.message })
 })
 
-$("start").addEventListener("click", () => { $("message").textContent = "Training launch is reserved for the next backend milestone." })
 $("start").addEventListener("click", async () => {
   try {
     await fetch(`${API}/experiments/start`, {method: "POST", headers: {"content-type": "application/json"}, body: $("payload").textContent})
