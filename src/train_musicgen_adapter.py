@@ -5,13 +5,17 @@ import argparse
 import json
 from pathlib import Path
 
-import soundfile as sf
 import torch
-import torchaudio
-from peft import LoraConfig, get_peft_model
-from transformers import AutoProcessor, MusicgenForConditionalGeneration, logging
+from transformers import logging
 
 logging.set_verbosity_error()
+
+
+def normalize_decoder_start_token(model):
+    """Bridge the nested MusicGen config used by Transformers 4.49."""
+    if getattr(model.config, "decoder_start_token_id", None) is None:
+        model.config.decoder_start_token_id = model.config.decoder.decoder_start_token_id
+    return model
 
 
 def main() -> int:
@@ -20,6 +24,11 @@ def main() -> int:
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--device", default="mps", choices=("mps", "cuda", "cpu"))
     args = parser.parse_args()
+    import soundfile as sf
+    import torchaudio
+    from peft import LoraConfig, get_peft_model
+    from transformers import AutoProcessor, MusicgenForConditionalGeneration
+
     record = json.loads(args.manifest.read_text().splitlines()[0])
     audio, sample_rate = sf.read(record["source_audio"], dtype="float32")
     if audio.ndim > 1:
@@ -30,7 +39,8 @@ def main() -> int:
     wave = wave[:, : 32000 * 4]
     device = torch.device(args.device)
     processor = AutoProcessor.from_pretrained("facebook/musicgen-small", local_files_only=True)
-    model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-small", local_files_only=True).to(device)
+    model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-small", local_files_only=True)
+    model = normalize_decoder_start_token(model).to(device)
     model.audio_encoder.eval()
     for parameter in model.audio_encoder.parameters():
         parameter.requires_grad_(False)
