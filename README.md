@@ -110,6 +110,8 @@ The remaining implementation milestones and acceptance criteria are tracked in [
 
 Deterministic target rendering is available at `src/build_edit_targets.py`. It supports stem subtraction for remove, stem addition for add, and replacement by subtracting the target stem and adding an explicitly recorded replacement stem. Rendered audio belongs in ignored local output directories; manifests should record the source and target paths only.
 
+The edit-aware objective layer is available at `src/edit_losses.py`. It reports edit loss, preservation loss, and their weighted total separately so experiments can quantify the requested-edit versus untouched-content trade-off.
+
 Run `make smoke-train` to exercise device selection and a 10-step adapter-only optimization loop. This is a runtime smoke test, not MusicGen training; it confirms the native MPS/CUDA/CPU path before the licensed MusicGen backend is connected.
 
 Run `make musicgen-check` to verify access to `facebook/musicgen-small` and its processor without loading model weights. The checkpoint preflight deliberately precedes real training because plain MusicGen is text-to-music; the source-audio editing conditioning path must be validated before adapter optimization.
