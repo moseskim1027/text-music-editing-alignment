@@ -51,6 +51,7 @@ def main() -> int:
     parser.add_argument("manifest", type=Path, default=Path("data/derived.jsonl"), nargs="?")
     parser.add_argument("--example-id", default="")
     parser.add_argument("--instruction", default="")
+    parser.add_argument("--limit", type=int, default=1, help="Number of labeled records to cycle through")
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--device", default="mps", choices=("mps", "cuda", "cpu"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/runs/latest"))
@@ -64,6 +65,10 @@ def main() -> int:
     record = next((item for item in records if item.get("example_id") == args.example_id), records[0])
     if args.instruction:
         record["instruction"] = args.instruction
+    if args.example_id:
+        records = [record]
+    else:
+        records = records[: max(1, args.limit)]
     args.output_dir.mkdir(parents=True, exist_ok=True)
     wave = load_audio(Path(record["source_audio"]), 32000 * 4, sf, torchaudio)
     target_path = Path(record["target_audio"])
@@ -82,17 +87,27 @@ def main() -> int:
         parameter.requires_grad_(False)
     model = get_peft_model(model, LoraConfig(r=8, lora_alpha=16, target_modules=["q_proj", "v_proj"], lora_dropout=0.05))
     model = normalize_decoder_start_token(model).to(device)
-    inputs = processor(audio=wave.squeeze(0).numpy(), sampling_rate=32000, text=[record["instruction"]], return_tensors="pt")
-    inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
-    target_inputs = processor(audio=target_wave.squeeze(0).numpy(), sampling_rate=32000, text=[record["instruction"]], return_tensors="pt")
-    target_inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in target_inputs.items()}
-    with torch.no_grad():
-        codes = model.base_model.model.audio_encoder(**{key: target_inputs[key] for key in ("input_values", "padding_mask") if key in target_inputs}).audio_codes
-    labels = codes[0].permute(0, 2, 1).contiguous()
     optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad), lr=1e-4)
+    examples = []
+    for item in records:
+        item_wave = load_audio(Path(item["source_audio"]), 32000 * 4, sf, torchaudio)
+        item_target = Path(item["target_audio"])
+        if not item_target.exists():
+            from build_edit_targets import render_target
+            item_target = args.output_dir / f"{item['example_id']}_target.wav"
+            render_target(Path(item["source_audio"]), resolve_target_stem(item), item_target, item["operation"], Path(item["replacement_stem_audio"]) if item.get("replacement_stem_audio") else None)
+        target = load_audio(item_target, item_wave.shape[-1], sf, torchaudio)
+        item_inputs = processor(audio=item_wave.squeeze(0).numpy(), sampling_rate=32000, text=[item["instruction"]], return_tensors="pt")
+        item_inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in item_inputs.items()}
+        target_inputs = processor(audio=target.squeeze(0).numpy(), sampling_rate=32000, text=[item["instruction"]], return_tensors="pt")
+        target_inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in target_inputs.items()}
+        with torch.no_grad():
+            codes = model.base_model.model.audio_encoder(**{key: target_inputs[key] for key in ("input_values", "padding_mask") if key in target_inputs}).audio_codes
+        examples.append((item_inputs, codes[0].permute(0, 2, 1).contiguous()))
     losses = []
     model.train()
-    for _ in range(args.steps):
+    for step in range(args.steps):
+        inputs, labels = examples[step % len(examples)]
         optimizer.zero_grad()
         loss = model(**inputs, labels=labels).loss
         loss.backward()
@@ -112,7 +127,7 @@ def main() -> int:
     # Keep comparison artifacts duration-matched to the source prompt.
     generated_audio = generated_audio[: wave.shape[-1]]
     sf.write(generated_path, generated_audio, 32000, format="WAV", subtype="PCM_16")
-    print(json.dumps({"device": str(device), "steps": args.steps, "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "artifacts": {"source_audio": str(source_path), "generated_audio": str(generated_path)}, "status": "MusicGen source-conditioned edit completed"}, indent=2))
+    print(json.dumps({"device": str(device), "steps": args.steps, "examples": len(examples), "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "artifacts": {"source_audio": str(source_path), "generated_audio": str(generated_path)}, "status": "MusicGen labeled edit training completed"}, indent=2))
 
 
 if __name__ == "__main__":
