@@ -35,4 +35,10 @@ evaluate:
 
 # Scan a local Slakh-style subset and create metadata-only edit records.
 prepare-data:
-	docker compose run --rm research python src/prepare_slakh_manifest.py "$${DATASET_ROOT:?set DATASET_ROOT}" "$${SUBSET:-data/derived.jsonl}"
+	@dataset_root="$${DATASET_ROOT:?set DATASET_ROOT}"; \
+	output="$${SUBSET:-data/derived.jsonl}"; \
+	output_dir="$$(dirname "$$output")"; \
+	docker compose run --rm \
+		-v "$$dataset_root:$$dataset_root:ro" \
+		-v "$$output_dir:$$output_dir" \
+		research python src/prepare_slakh_manifest.py "$$dataset_root" "$$output"

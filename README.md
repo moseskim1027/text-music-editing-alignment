@@ -86,6 +86,6 @@ MLflow tracking is available through Docker Compose. Start it with `docker compo
 
 Use the `Makefile` as the standard command wrapper: `make build`, `make test`, `make mlflow`, `make validate`, or `make evaluate`. Run `make help` to see what each target does. All Python and MLflow commands run inside Docker.
 
-For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=data/derived.jsonl`. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
+For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
 Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment. `make evaluate` uses the `text-music-editing-alignment-local` experiment by default (`MLFLOW_EXPERIMENT=...` overrides it).
