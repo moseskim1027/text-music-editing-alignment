@@ -73,8 +73,13 @@ def _run_training(request: ExperimentRequest) -> None:
         output = "".join(output_lines)
         if process.returncode:
             raise RuntimeError(error[-2000:] or "training worker failed")
-        run_state.update(phase="generating")
-        run_state["result"] = {"output": output}
+        run_state.update(phase="evaluating")
+        artifact_dir = Path("outputs/runs/latest")
+        evaluation = subprocess.run(
+            [sys.executable, "src/evaluate_audio.py", str(artifact_dir / "source.wav"), str(artifact_dir / "reference_target.wav"), str(artifact_dir / "generated_edit.wav"), "--output", str(artifact_dir / "evaluation.json")],
+            capture_output=True, text=True, check=True,
+        )
+        run_state["result"] = {"output": output, "evaluation": json.loads(evaluation.stdout)}
         run_state.update(status="completed", phase="completed", step=request.steps)
     except Exception as exc:
         run_state.update(status="failed", phase="failed", result={"error": str(exc)})
