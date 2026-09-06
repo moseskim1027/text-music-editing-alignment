@@ -89,7 +89,11 @@ curl http://localhost:8000/device
 curl -s http://localhost:8000/experiments/status | python -m json.tool
 ```
 
+### Training
+
 ![Training workflow](docs/training.gif)
+
+### Evaluation
 
 ![Evaluation workflow](docs/evaluation.gif)
 
@@ -150,4 +154,3 @@ Metrics must be reported jointly; higher adherence is not an improvement if pres
 - Run larger held-out experiments and human evaluation with uncertainty estimates.
 
 See [research/roadmap.md](research/roadmap.md), [docs/data_protocol.md](docs/data_protocol.md), and [docs/training_plan.md](docs/training_plan.md) for details.
-
