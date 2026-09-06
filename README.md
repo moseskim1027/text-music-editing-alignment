@@ -75,3 +75,5 @@ The adapter-training plan and M1/16 GB starting configuration are documented in 
 Example metadata-only manifests are provided in `data/benchmark.example.jsonl` and `data/preferences.example.jsonl`. Replace the placeholder audio paths with locally licensed data; raw audio remains outside version control.
 
 Continuous integration builds the Docker image and runs the complete test suite on pushes and pull requests targeting `main`.
+
+Experiment metadata can be recorded with `src/record_run.py`; it captures hashes for the configuration and manifest, the git commit, runtime details, and the selected device.
