@@ -28,6 +28,7 @@ def main() -> int:
     parser.add_argument("manifest", type=Path, default=Path("data/derived.jsonl"), nargs="?")
     parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--device", default="mps", choices=("mps", "cuda", "cpu"))
+    parser.add_argument("--output-dir", type=Path, default=Path("outputs/runs/latest"))
     args = parser.parse_args()
     import soundfile as sf
     import torchaudio
@@ -66,7 +67,15 @@ def main() -> int:
         optimizer.step()
         losses.append(float(loss.detach().cpu()))
         print(json.dumps({"event": "progress", "step": len(losses), "steps": args.steps, "loss": losses[-1]}), flush=True)
-    print(json.dumps({"device": str(device), "steps": args.steps, "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "status": "MusicGen LoRA reconstruction smoke test passed"}, indent=2))
+    model.eval()
+    with torch.no_grad():
+        generated = model.generate(**inputs, max_new_tokens=256)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    source_path = args.output_dir / "source.wav"
+    generated_path = args.output_dir / "generated_edit.wav"
+    sf.write(source_path, wave.squeeze(0).detach().cpu().numpy(), 32000)
+    sf.write(generated_path, generated[0].detach().cpu().numpy(), 32000)
+    print(json.dumps({"device": str(device), "steps": args.steps, "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "artifacts": {"source_audio": str(source_path), "generated_audio": str(generated_path)}, "status": "MusicGen source-conditioned edit completed"}, indent=2))
 
 
 if __name__ == "__main__":
