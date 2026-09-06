@@ -106,6 +106,8 @@ The compact experiment dashboard is available with `make ui` at `http://localhos
 
 The dashboard control API is available with `make api` at `http://localhost:8000`. Its `/device` endpoint reports accelerator visibility and `/experiments/preview` validates a run contract before training is launched.
 
+The remaining implementation milestones and acceptance criteria are tracked in [`research/roadmap.md`](research/roadmap.md). The roadmap covers local-first editing, alignment, UI, tracking, data experiments, and human evaluation; cloud scaling is intentionally deferred.
+
 Run `make smoke-train` to exercise device selection and a 10-step adapter-only optimization loop. This is a runtime smoke test, not MusicGen training; it confirms the native MPS/CUDA/CPU path before the licensed MusicGen backend is connected.
 
 Run `make musicgen-check` to verify access to `facebook/musicgen-small` and its processor without loading model weights. The checkpoint preflight deliberately precedes real training because plain MusicGen is text-to-music; the source-audio editing conditioning path must be validated before adapter optimization.
