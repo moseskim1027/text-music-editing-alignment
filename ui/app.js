@@ -42,6 +42,13 @@ $("start").addEventListener("click", async () => {
       if (status.status === "completed") {
         $("message").textContent = "Training completed. Audio and evaluation artifacts will appear when produced by the run."
         $("mlflow-link").classList.remove("hidden")
+        $("evaluation-status").textContent = "COMPLETE"
+        $("evaluation-status").classList.add("success")
+        const evaluation = status.result?.evaluation || {}
+        setText("adherence", evaluation.adherence_proxy === undefined ? "—" : evaluation.adherence_proxy.toFixed(3))
+        setText("preservation", evaluation.preservation_proxy === undefined ? "—" : evaluation.preservation_proxy.toFixed(3))
+        setText("quality", evaluation.quality_proxy === undefined ? "—" : evaluation.quality_proxy.toFixed(3))
+        setText("preference-win", evaluation.preference_win_rate == null ? "N/A" : evaluation.preference_win_rate.toFixed(3))
         const output = status.result?.output || ""
         const match = output.match(/"artifacts"\s*:\s*\{[\s\S]*?"source_audio"\s*:\s*"([^"]+)"[\s\S]*?"generated_audio"\s*:\s*"([^"]+)"/)
         if (match) {
