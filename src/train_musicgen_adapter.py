@@ -124,8 +124,9 @@ def main() -> int:
     generated_audio = generated[0].detach().float().cpu().numpy()
     if generated_audio.ndim > 1:
         generated_audio = generated_audio[0]
-    # Keep comparison artifacts duration-matched to the source prompt.
-    generated_audio = generated_audio[: wave.shape[-1]]
+    # MusicGen returns the audio prompt followed by generated continuation.
+    # Keep only the continuation and match the source duration for comparison.
+    generated_audio = generated_audio[-wave.shape[-1]:]
     sf.write(generated_path, generated_audio, 32000, format="WAV", subtype="PCM_16")
     print(json.dumps({"device": str(device), "steps": args.steps, "examples": len(examples), "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "artifacts": {"source_audio": str(source_path), "generated_audio": str(generated_path)}, "status": "MusicGen labeled edit training completed"}, indent=2))
 
