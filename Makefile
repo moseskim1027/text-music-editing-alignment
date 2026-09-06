@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -6,6 +6,7 @@ help:
 		'make build       Build the Docker images' \
 		'make test        Run the complete test suite in Docker' \
 		'make cloud-test  Run tests with the NVIDIA GPU Compose override' \
+		'make device      Report CUDA/MPS/CPU availability' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -22,6 +23,10 @@ test:
 # Run the same tests with NVIDIA GPU passthrough for cloud hosts.
 cloud-test:
 	docker compose -f docker-compose.yml -f docker-compose.gpu.yml run --rm research
+
+# Report available accelerators inside the reproducible research container.
+device:
+	docker compose run --rm research python src/check_device.py
 
 # Start MLflow in the background; override MLFLOW_PORT if 5000 is occupied.
 mlflow:
