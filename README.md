@@ -104,6 +104,8 @@ For native M1 setup, run `make native-install` once, then `make native-device`. 
 
 The compact experiment dashboard is available with `make ui` at `http://localhost:8080`. It previews the shared experiment contract (manifest, edit instruction, adapter settings, device, and MLflow endpoint) without moving audio data into Git. Training execution will consume this same contract in the next UI milestone.
 
+The dashboard control API is available with `make api` at `http://localhost:8000`. Its `/device` endpoint reports accelerator visibility and `/experiments/preview` validates a run contract before training is launched.
+
 For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
 Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment. `make evaluate` uses the `text-music-editing-alignment-local` experiment by default (`MLFLOW_EXPERIMENT=...` overrides it).
