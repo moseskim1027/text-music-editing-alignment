@@ -3,7 +3,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
-import json
 import subprocess
 import sys
 from pydantic import BaseModel, Field
