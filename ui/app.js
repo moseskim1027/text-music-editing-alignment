@@ -28,6 +28,7 @@ $("start").addEventListener("click", async () => {
       const status = await fetch(`${API}/experiments/status`).then((r) => r.json())
       $("run-state").textContent = status.status.toUpperCase()
       $("step").textContent = `${status.step} / ${status.steps}`
+      $("edit-loss").textContent = status.loss === undefined ? "—" : status.loss.toFixed(4)
       $("progress-bar").style.width = status.steps ? `${100 * status.step / status.steps}%` : "0%"
       if (status.status !== "running") clearInterval(timer)
     }, 1000)

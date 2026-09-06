@@ -47,16 +47,27 @@ def preview(request: ExperimentRequest) -> dict:
 def _run_training(request: ExperimentRequest) -> None:
     try:
         run_state.update(status="running", step=0, steps=request.steps, result=None)
-        process = subprocess.run(
+        process = subprocess.Popen(
             [sys.executable, "src/train_musicgen_adapter.py", request.manifest, "--steps", str(request.steps), "--device", request.device],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            check=False,
         )
+        output_lines = []
+        for line in process.stdout or ():
+            output_lines.append(line)
+            try:
+                event = json.loads(line)
+                if event.get("event") == "progress":
+                    run_state.update(step=event["step"], steps=event["steps"], loss=event["loss"])
+            except (ValueError, TypeError, KeyError):
+                continue
+        error = process.stderr.read() if process.stderr else ""
+        process.wait()
+        output = "".join(output_lines)
         if process.returncode:
-            raise RuntimeError(process.stderr[-2000:] or "training worker failed")
-        import json
-        run_state["result"] = json.loads(process.stdout)
+            raise RuntimeError(error[-2000:] or "training worker failed")
+        run_state["result"] = {"output": output}
         run_state.update(status="completed", step=request.steps)
     except Exception as exc:
         run_state.update(status="failed", result={"error": str(exc)})

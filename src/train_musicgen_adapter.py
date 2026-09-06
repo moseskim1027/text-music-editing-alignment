@@ -65,6 +65,7 @@ def main() -> int:
         loss.backward()
         optimizer.step()
         losses.append(float(loss.detach().cpu()))
+        print(json.dumps({"event": "progress", "step": len(losses), "steps": args.steps, "loss": losses[-1]}), flush=True)
     print(json.dumps({"device": str(device), "steps": args.steps, "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "status": "MusicGen LoRA reconstruction smoke test passed"}, indent=2))
 
 
