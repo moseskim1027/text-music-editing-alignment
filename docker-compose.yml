@@ -6,6 +6,14 @@ services:
     ports:
       - "${UI_PORT:-8080}:80"
 
+  api:
+    build:
+      context: .
+    image: text-music-editing-alignment:api
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "${API_PORT:-8000}:8000"
+
   research:
     build:
       context: .
