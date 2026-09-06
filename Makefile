@@ -1,4 +1,4 @@
-.PHONY: help build test cloud-test device native-install native-device ui api smoke-train musicgen-check mlflow validate evaluate prepare-data
+.PHONY: help build test cloud-test device native-install native-device ui api smoke-train musicgen-check musicgen-train mlflow validate evaluate prepare-data
 
 # Show the available repository commands.
 help:
@@ -13,6 +13,7 @@ help:
 		'make api      Start the experiment control API on port 8000' \
 		'make smoke-train Run the tiny adapter/device smoke test' \
 		'make musicgen-check Check MusicGen-small config/tokenizer access' \
+		'make musicgen-train Run the tiny native MusicGen LoRA smoke test' \
 		'make mlflow      Start the local MLflow tracking server' \
 		'make validate    Validate the example benchmark manifest' \
 		'make evaluate    Log example evaluation scores to MLflow' \
@@ -66,6 +67,10 @@ smoke-train:
 # Check the MusicGen checkpoint without downloading model weights.
 musicgen-check:
 	.venv-macos/bin/python src/check_musicgen.py --model "$${MODEL_ID:-facebook/musicgen-small}"
+
+# Run one 4-second example through the native MPS LoRA training path.
+musicgen-train:
+	.venv-macos/bin/python src/train_musicgen_adapter.py "$${MANIFEST:-data/derived.jsonl}" --steps "$${STEPS:-10}" --device "$${DEVICE:-mps}"
 
 # Validate the checked-in metadata-only benchmark fixture.
 validate:
