@@ -1,7 +1,8 @@
 const $ = (id) => document.getElementById(id)
 const setText = (id, value) => { const element = $(id); if (element) element.textContent = value }
 const API = "http://localhost:8000"
-const currentPayload = () => ({manifest: $("manifest").value, example_id: $("example-id").value.trim() || null, operation: $("operation").value, instruction: $("instruction").value.trim(), adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: "http://localhost:5000"})
+const MLFLOW = "http://localhost:5001"
+const currentPayload = () => ({manifest: $("manifest").value, example_id: $("example-id").value.trim() || null, example_limit: Number($("example-limit").value), duration_seconds: Number($("duration").value), operation: $("operation").value, instruction: $("instruction").value.trim(), adapter_rank: Number($("rank").value), steps: Number($("steps").value), device: "mps", tracking_uri: MLFLOW})
 
 fetch(`${API}/device`).then((response) => response.json()).then((device) => {
   setText("device-name", `${device.recommended.toUpperCase()} ${device[device.recommended] ? "ready" : "fallback"}`)
@@ -37,6 +38,7 @@ $("start").addEventListener("click", async () => {
       const status = await fetch(`${API}/experiments/status`).then((r) => r.json())
       $("run-state").textContent = (status.phase || status.status).toUpperCase()
       $("step").textContent = `${status.step} / ${status.steps}`
+      setText("example-count", status.result?.examples || "—")
       $("edit-loss").textContent = status.loss === undefined ? "—" : status.loss.toFixed(4)
       const result = status.result || {}
       if (status.status === "completed") {
