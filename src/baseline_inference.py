@@ -9,7 +9,10 @@ import argparse
 import json
 from pathlib import Path
 
-from src.validate_manifest import load_records
+try:
+    from src.validate_manifest import load_records
+except ModuleNotFoundError:  # direct execution: python src/baseline_inference.py ...
+    from validate_manifest import load_records
 
 
 def plan_jobs(manifest: Path, output_dir: Path, require_audio: bool = True) -> list[dict]:

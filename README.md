@@ -84,4 +84,6 @@ The metadata-only provenance example is in `data/registry.example.jsonl`; valida
 
 MLflow tracking is available through Docker Compose. Start it with `docker compose up -d mlflow` and wait for `docker compose ps` to report it healthy, then open `http://localhost:5000` (set `MLFLOW_PORT=5001` if that port is occupied). The SQLite database and artifacts persist in named Docker volumes. Training scripts can use `src/mlflow_tracking.py` to log configuration, run metadata, metrics, and selected artifacts to the local server.
 
+Use `scripts/docker.sh` as the standard command wrapper: `scripts/docker.sh build`, `scripts/docker.sh test`, `scripts/docker.sh mlflow`, `scripts/docker.sh validate data/benchmark.example.jsonl`, or `scripts/docker.sh evaluate data/scores.example.jsonl`. The wrapper runs all Python and MLflow commands inside Docker.
+
 Evaluation results can be logged with `python src/log_evaluation.py path/to/scores.jsonl`; use `--tracking-uri` for a different MLflow server or `--experiment` to select an experiment.
