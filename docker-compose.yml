@@ -12,10 +12,14 @@ services:
     build:
       context: .
     image: text-music-editing-alignment:mlflow
+    # The service initializes named volumes owned by root; the research
+    # container remains non-root for normal development and testing.
+    user: "0:0"
     command: >-
       mlflow server --host 0.0.0.0 --port 5000
       --backend-store-uri sqlite:////mlflow/mlflow.db
       --default-artifact-root /mlflow-artifacts
+      --allowed-hosts mlflow,localhost,127.0.0.1
     ports:
       - "${MLFLOW_PORT:-5000}:5000"
     healthcheck:

@@ -5,7 +5,10 @@ import argparse
 import json
 from pathlib import Path
 
-from src.evaluate import aggregate, read_scores
+try:
+    from src.evaluate import aggregate, read_scores
+except ModuleNotFoundError:  # direct execution: python src/log_evaluation.py ...
+    from evaluate import aggregate, read_scores
 
 
 def log_evaluation(scores_path: Path, experiment: str, tracking_uri: str) -> str:
