@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Edit Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header><div class="brand"><span class="mark">♪</span><div><strong>Music Edit Lab</strong><small>Preservation-aware alignment</small></div></div><span class="pill">LOCAL WORKSPACE</span></header>
+    <main>
+      <section class="intro"><div><p class="eyebrow">EXPERIMENT CONTROL</p><h1>Run a focused edit experiment.</h1><p class="muted">Configure one reproducible run, then compare edit strength against what the source preserves.</p></div><div class="device"><span class="dot"></span><div><strong>MPS ready</strong><small>Apple Silicon · native runtime</small></div></div></section>
+      <div class="grid">
+        <section class="card"><div class="card-head"><h2>Experiment</h2><span class="tag">DRY RUN</span></div>
+          <label>Dataset manifest<select id="manifest"><option>data/benchmark.example.jsonl</option><option>data/derived.jsonl</option></select></label>
+          <label>Edit operation<select id="operation"><option>add</option><option>remove</option><option>replace</option></select></label>
+          <label>Instruction<input id="instruction" value="Add a warm electric piano layer while preserving the drums." /></label>
+          <div class="row"><label>Adapter rank<input id="rank" type="number" value="8" min="1" max="64" /></label><label>Steps<input id="steps" type="number" value="10" min="1" max="1000" /></label></div>
+          <button id="run">Validate &amp; preview run</button><p id="message" class="message" aria-live="polite"></p>
+        </section>
+        <section class="card"><div class="card-head"><h2>Run contract</h2><span class="tag quiet">REPRODUCIBLE</span></div><div class="contract"><div><span>DEVICE</span><strong id="contract-device">mps</strong></div><div><span>TRACKING</span><strong>MLflow</strong></div><div><span>MODEL</span><strong>MusicGen-small + LoRA</strong></div><div><span>DATA POLICY</span><strong>Metadata only in Git</strong></div></div><div class="metrics"><h3>Evaluation targets</h3><div><span>Prompt adherence</span><b>0–1</b></div><div><span>Preservation</span><b>0–1</b></div><div><span>Audio quality</span><b>0–1</b></div><div><span>Preference win rate</span><b>0–1</b></div></div></section>
+      </div>
+      <section id="preview" class="card preview hidden"><div class="card-head"><h2>Prepared run</h2><span class="tag success">VALID</span></div><pre id="payload"></pre><p class="muted">This first UI slice validates the shared experiment contract. Training launch and live MLflow progress will attach to the same payload.</p></section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

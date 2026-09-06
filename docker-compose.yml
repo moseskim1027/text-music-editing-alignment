@@ -1,4 +1,11 @@
 services:
+  ui:
+    build:
+      context: ./ui
+    image: text-music-editing-alignment:ui
+    ports:
+      - "${UI_PORT:-8080}:80"
+
   research:
     build:
       context: .
