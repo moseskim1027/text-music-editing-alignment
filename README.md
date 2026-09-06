@@ -39,6 +39,113 @@ src/         Reusable datasets, models, training, and evaluation code
 tests/       Unit and integration tests
 ```
 
+## Getting started
+
+All commands below assume the repository root and keep audio, checkpoints, generated outputs, and MLflow state outside Git.
+
+### 1. Build and run the Docker development environment
+
+```bash
+make build
+make test
+```
+
+`make test` runs the complete suite inside the `research` Docker service. Use `make device` to inspect accelerator visibility inside Docker. Docker on macOS does not expose the host Apple MPS device; use the native environment for MPS training.
+
+### 2. Prepare the metadata-only BabySlakh manifest
+
+Place the locally licensed dataset outside this repository, for example:
+
+```text
+/Users/moseskim/Downloads/babyslakh_16k
+```
+
+Generate `data/derived.jsonl` without copying audio into Git:
+
+```bash
+make prepare-data \
+  DATASET_ROOT=/Users/moseskim/Downloads/babyslakh_16k \
+  SUBSET=data/derived.jsonl
+```
+
+The manifest records `example_id`, `source_audio`, edit instruction, operation, target stem, split, and target paths. It is metadata only; validate it with:
+
+```bash
+docker compose run --rm research python src/validate_manifest.py data/derived.jsonl
+```
+
+Do not commit `data/derived.jsonl`, audio, model weights, checkpoints, `outputs/`, or MLflow volumes.
+
+### 3. Install and verify native macOS MPS
+
+```bash
+make native-install
+make native-device
+```
+
+The native environment is required for Apple GPU access. The MusicGen checkpoint must already be available in the local Hugging Face cache because training uses `local_files_only=True`.
+
+### 4. Run labeled MusicGen training
+
+The compact prototype defaults to one selected example, 10 optimizer steps, MPS, and a 10-second comparison window:
+
+```bash
+MANIFEST=data/derived.jsonl \
+STEPS=10 \
+DEVICE=mps \
+make musicgen-train
+```
+
+For a small multi-example run, leave `Example ID` empty in the UI or use the worker directly:
+
+```bash
+.venv-macos/bin/python src/train_musicgen_adapter.py data/derived.jsonl \
+  --limit 3 --steps 3 --duration-seconds 10 --device mps
+```
+
+Use `--example-id Track00001_S02_add` to select the verified piano-add example. Outputs are written to ignored local paths under `outputs/runs/latest/`.
+
+### 5. Start MLflow, API, and UI
+
+Start MLflow (port 5000 by default):
+
+```bash
+make mlflow
+```
+
+If macOS already owns port 5000, use port 5001:
+
+```bash
+MLFLOW_PORT=5001 docker compose up -d mlflow
+```
+
+Start the native API in one terminal and the UI in another:
+
+```bash
+make api-native
+make ui
+```
+
+Open `http://localhost:8080`. Use **Validate & preview run**, then **Start training**. The UI separates edit-example metadata from training settings, reports training and generation phases, and displays the original/generated audio pair and evaluation results. If MLflow uses port 5001, open `http://localhost:5001` until the UI tracking URL is configured for that port.
+
+![Training workflow](docs/training.gif)
+
+![Evaluation workflow](docs/evaluation.gif)
+
+### 6. Evaluate artifacts
+
+The backend evaluates generated artifacts automatically after generation. To run the evaluator directly:
+
+```bash
+.venv-macos/bin/python src/evaluate_audio.py \
+  outputs/runs/latest/source.wav \
+  outputs/runs/latest/reference_target.wav \
+  outputs/runs/latest/generated_edit.wav \
+  --output outputs/runs/latest/evaluation.json
+```
+
+The report contains adherence, preservation, and quality audio proxies. Preference win rate remains `N/A` until blinded human preference labels are available. Aggregate manually scored JSONL results and log them to MLflow with `make evaluate` or `python src/log_evaluation.py`.
+
 ## Evaluation plan
 
 Every experiment should report task performance, preservation, quality, and alignment metrics on a fixed evaluation split, alongside compute and configuration details.
@@ -120,7 +227,7 @@ Run `make smoke-train` to exercise device selection and a 10-step adapter-only o
 
 Run `make musicgen-check` to verify access to `facebook/musicgen-small` and its processor without loading model weights. The checkpoint preflight deliberately precedes real training because plain MusicGen is text-to-music; the source-audio editing conditioning path must be validated before adapter optimization.
 
-Run `make musicgen-train` from the native MPS environment for the first bounded MusicGen LoRA reconstruction smoke test. It uses one four-second manifest example and ten steps; this validates gradient flow and memory behavior, while preference-target construction remains a subsequent research step.
+Run `make musicgen-train` from the native MPS environment for labeled MusicGen LoRA training. It uses manifest targets for supervised add/remove/replace training, supports multi-example pools and configurable 1–30 second windows, and writes ignored local artifacts under `outputs/runs/latest/`.
 
 For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
