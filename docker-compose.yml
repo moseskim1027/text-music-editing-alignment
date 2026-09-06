@@ -1,0 +1,9 @@
+services:
+  research:
+    build:
+      context: .
+    image: text-music-editing-alignment:dev
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: python -m unittest discover -s tests -v
