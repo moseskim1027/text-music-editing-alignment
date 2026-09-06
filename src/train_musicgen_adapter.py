@@ -74,7 +74,10 @@ def main() -> int:
     source_path = args.output_dir / "source.wav"
     generated_path = args.output_dir / "generated_edit.wav"
     sf.write(source_path, wave.squeeze(0).detach().cpu().numpy(), 32000)
-    sf.write(generated_path, generated[0].detach().cpu().numpy(), 32000)
+    generated_audio = generated[0].detach().float().cpu().numpy()
+    if generated_audio.ndim > 1:
+        generated_audio = generated_audio[0]
+    sf.write(generated_path, generated_audio, 32000, format="WAV", subtype="PCM_16")
     print(json.dumps({"device": str(device), "steps": args.steps, "initial_loss": losses[0], "final_loss": losses[-1], "trainable_parameters": sum(p.numel() for p in model.parameters() if p.requires_grad), "artifacts": {"source_audio": str(source_path), "generated_audio": str(generated_path)}, "status": "MusicGen source-conditioned edit completed"}, indent=2))
 
 
