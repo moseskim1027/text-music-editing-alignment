@@ -1,0 +1,9 @@
+services:
+  research:
+    gpus: all
+    environment:
+      DEVICE: cuda
+      CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}
+
+  mlflow:
+    gpus: all
