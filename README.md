@@ -100,7 +100,7 @@ Local runs use the default container with MPS/CPU selected by the training confi
 
 Run `make device` to report accelerator availability inside Docker before training. The probe prefers CUDA, then MPS, then CPU, and works even before PyTorch is installed.
 
-For native M1 setup, run `make native-install` once, then `make native-device`. The installer uses the official PyPI index to obtain the arm64 wheels. The pinned native dependencies are in `requirements-macos.txt`; the environment is ignored by Git. If an older venv already exists, rerun `make native-install` rather than installing with its old pip command.
+For native M1 setup, run `make native-install` once, then `make native-device`. The installer uses the official PyPI index to obtain the arm64 wheels. The probe reports macOS GPU/Metal visibility separately from PyTorch MPS runtime availability. If macOS reports Metal but MPS is unavailable, run the command from a native terminal rather than Docker or a restricted shell. The pinned native dependencies are in `requirements-macos.txt`; the environment is ignored by Git. If an older venv already exists, rerun `make native-install` rather than installing with its old pip command.
 
 For the real-data phase, place a locally licensed Slakh2100 subset outside the repository and run `make prepare-data DATASET_ROOT=/path/to/slakh SUBSET=/path/to/derived.jsonl`. The Docker target mounts the dataset read-only and the output directory read/write. The tool scans mixtures and stems, preserves the official splits, and writes metadata-only edit records; it does not copy audio into the repository.
 
