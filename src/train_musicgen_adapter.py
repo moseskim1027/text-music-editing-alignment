@@ -55,7 +55,7 @@ def main() -> int:
     wave = load_audio(Path(record["source_audio"]), 32000 * 4, sf, torchaudio)
     target_path = Path(record["target_audio"])
     if not target_path.exists():
-        from src.build_edit_targets import render_target
+        from build_edit_targets import render_target
         target_path = args.output_dir / "reference_target.wav"
         render_target(Path(record["source_audio"]), Path(record["target_stem_audio"]), target_path, record["operation"], Path(record["replacement_stem_audio"]) if record.get("replacement_stem_audio") else None)
     target_wave = load_audio(target_path, wave.shape[-1], sf, torchaudio)
