@@ -34,7 +34,7 @@ device:
 native-install:
 	python3 -m venv .venv-macos
 	.venv-macos/bin/python -m pip install --upgrade pip
-	.venv-macos/bin/pip install -r requirements-macos.txt
+	.venv-macos/bin/pip install --index-url https://pypi.org/simple -r requirements-macos.txt
 
 # Check accelerators from native macOS Python, where MPS can be visible.
 native-device:
