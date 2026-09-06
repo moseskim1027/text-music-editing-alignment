@@ -5,3 +5,4 @@ torch==2.6.0
 fastapi==0.115.12
 uvicorn==0.34.0
 peft==0.15.2
+soundfile==0.13.1
