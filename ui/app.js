@@ -51,8 +51,10 @@ $("start").addEventListener("click", async () => {
           $("audio-status").textContent = "Generated artifacts are ready for playback."
         }
       }
-      const progress = status.status === "completed" ? 100 : status.phase === "generating" ? 95 : (status.steps ? 90 * status.step / status.steps : 0)
+      const progress = status.status === "completed" || status.phase === "generating" ? 100 : (status.steps ? 100 * status.step / status.steps : 0)
       $("progress-bar").style.width = `${progress}%`
+      $("training-progress").textContent = `${Math.round(progress)}%`
+      $("generation-phase").classList.toggle("hidden", status.phase !== "generating")
       if (status.status !== "running") { clearInterval(timer); $("start").disabled = false }
     }, 1000)
   } catch (error) { $("message").textContent = error.message; $("start").disabled = false }
