@@ -1,10 +1,10 @@
 # Text-Guided Music Editing and Alignment
 
-[![CI](https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml/badge.svg)](https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml)
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-
-## About
+<p align="center">
+  <a href="https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml"><img src="https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11"></a>
+  <a href="https://docs.docker.com/compose/"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&amp;logoColor=white" alt="Docker Compose"></a>
+</p>
 
 A local-first research prototype for preservation-aware, text-guided music editing. It adapts MusicGen-small with LoRA to add, remove, or replace instruments in short Slakh/BabySlakh mixtures while preserving the musical content not named by the instruction [[1]](#ref-1) [[4]](#ref-4).
 
