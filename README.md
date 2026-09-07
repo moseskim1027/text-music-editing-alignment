@@ -38,6 +38,47 @@ metadata-only manifest --> deterministic source/target pairs
 
 The manifest is the contract between data preparation, training, and evaluation. It identifies the source audio, edit instruction, operation, target stem, expected target audio, and data split. Keeping this metadata separate from licensed audio makes the code and example schemas shareable without redistributing the dataset.
 
+## Model architecture
+
+`facebook/musicgen-small` is a composite conditional-generation model with three pretrained components:
+
+```text
+edit instruction ──> frozen T5 encoder ───────────────┐
+                                                      v
+source waveform ──> frozen 32 kHz EnCodec ──> audio codes
+                                                      |
+                                                      v
+                                      MusicGen Transformer decoder
+                                      24 layers, width 1024, 16 heads
+                                      4 delayed/interleaved codebooks
+                                                      |
+                                                      v
+                                        predicted audio codes
+                                                      |
+                                                      v
+                                      frozen EnCodec decoder ──> waveform
+```
+
+The T5 encoder converts the instruction into text hidden states. EnCodec converts a mono 32 kHz waveform into four streams of discrete codes sampled at 50 frames per second. The 300M-parameter MusicGen decoder autoregressively predicts the four delayed code streams, attending both to prior audio codes and to the text states. EnCodec then decodes the predicted codes into audio.
+
+In this repository, the source mixture is supplied as an audio prompt and the deterministic edited waveform supplies the supervised target codes. The current generation path is therefore source-conditioned continuation, not a native arbitrary-span editor: it retains the generated continuation and compares it with a same-duration reference edit. That distinction is important when interpreting preservation scores and motivates the architecture directions below.
+
+### Where LoRA is applied
+
+The implementation in `src/train_musicgen_adapter.py` wraps the complete model with PEFT but targets modules named only `q_proj` and `v_proj`. In the pinned Transformers implementation, those names occur in the MusicGen decoder—not in T5 or EnCodec. An adapter is inserted into four projections per decoder layer:
+
+```text
+MusicGen decoder layer (repeated 24 times)
+├── causal self-attention
+│   ├── q_proj + LoRA rank 8
+│   └── v_proj + LoRA rank 8
+└── text cross-attention
+    ├── q_proj + LoRA rank 8
+    └── v_proj + LoRA rank 8
+```
+
+This gives 96 adapted linear projections and 1,572,864 trainable parameters with `r=8`, `lora_alpha=16`, and dropout `0.05`. The pretrained projection weights, T5 text encoder, EnCodec audio codec, embeddings, feed-forward blocks, attention key/output projections, and output heads remain frozen. Self-attention adapters can change how the model uses the source and previously generated audio tokens; cross-attention adapters can change how strongly and where the instruction affects generation.
+
 ## Layout
 
 ```text
@@ -202,4 +243,24 @@ For reproducible comparisons, keep the base checkpoint, preprocessing, decoding 
 - Collect blinded preference pairs and implement preference optimization.
 - Run larger held-out experiments and human evaluation with uncertainty estimates.
 
+### Architecture directions
+
+The current LoRA baseline is intentionally small and useful for measuring whether decoder attention alone can learn the edit task. Stronger editing architectures should be compared against it rather than assumed to be improvements:
+
+- **Source-aligned latent editor:** encode the source and target into time-aligned EnCodec codes, then condition each target position directly on the corresponding source codes. A learned copy/edit gate could preserve unchanged codes and regenerate only regions affected by the instruction.
+- **Masked infilling instead of continuation:** train a bidirectional or span-denoising latent model to replace selected time/codebook regions. This better matches edits inside an existing clip than causal continuation does.
+- **Residual edit prediction:** predict a sparse latent delta or edit mask relative to the source representation, with an identity objective outside the target stem or time region. This makes preservation part of the architecture rather than only an evaluation metric.
+- **Stem-aware conditioning:** retain separated or grouped source-stem embeddings during training and provide the target instrument and operation as structured conditioning. At inference, a separator could supply those streams when stems are unavailable.
+- **Broader, measured adapter placement:** ablate LoRA on key/output attention projections, feed-forward layers, and source-conditioning projections; vary rank by layer; and compare against the current query/value-only budget at a fixed trainable-parameter count.
+
+Each direction needs operation-stratified ablations and listening tests. In particular, an architecture should count as better only if edit adherence improves without degrading untouched-content preservation, audio quality, or inference cost beyond the stated budget.
+
 See [research/roadmap.md](research/roadmap.md), [docs/data_protocol.md](docs/data_protocol.md), and [docs/training_plan.md](docs/training_plan.md) for details.
+
+## References
+
+- Copet, J. et al. (2023). [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284). The MusicGen architecture, codebook-delay pattern, conditioning, and model scaling.
+- Défossez, A. et al. (2022). [High Fidelity Neural Audio Compression](https://arxiv.org/abs/2210.13438). The EnCodec neural audio codec used to represent waveforms as discrete tokens.
+- Hu, E. J. et al. (2021). [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685). The parameter-efficient adaptation method used by the training path.
+- Manilow, E. et al. (2019). [Cutting Music Source Separation Some Slakh: A Dataset to Study the Impact of Training Data Quality and Quantity](https://www.merl.com/publications/TR2019-124). The source dataset and aligned multitrack construction.
+- Hugging Face. [MusicGen model documentation](https://huggingface.co/docs/transformers/model_doc/musicgen) and [`facebook/musicgen-small` model card](https://huggingface.co/facebook/musicgen-small). The composite Transformers implementation and checkpoint details used here.
