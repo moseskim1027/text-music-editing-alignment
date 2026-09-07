@@ -1,6 +1,6 @@
 # Text-Guided Music Editing and Alignment
 
-Research code for preservation-aware text-guided music editing. The prototype uses MusicGen-small with LoRA adapters and labeled add/remove/replace targets derived from a local Slakh/BabySlakh subset.
+Research code for preservation-aware text-guided music editing. The prototype uses MusicGen-small with LoRA adapters and labeled add/remove/replace targets derived from a local Slakh/BabySlakh subset [[1]](#ref-1) [[4]](#ref-4).
 
 The goal is to make a requested musical change while retaining the parts of the source that the instruction does not target. The repository covers the experimental path from manifest creation and deterministic target construction through adapter training, local inference, evaluation, and run tracking.
 
@@ -14,7 +14,7 @@ This is a research prototype rather than a production audio editor. It currently
 - **Remove:** subtract a target stem while preserving the remaining mixture.
 - **Replace:** exchange one target stem for another.
 
-Target waveforms are built deterministically from source stems. MusicGen encodes the edit instruction, the pretrained base model remains frozen, and LoRA adapters provide the trainable parameters. Current adherence, preservation, and quality scores are useful experiment proxies, not comprehensive perceptual or semantic metrics.
+Target waveforms are built deterministically from source stems. MusicGen encodes the edit instruction, the pretrained base model remains frozen, and LoRA adapters provide the trainable parameters [[3]](#ref-3). Current adherence, preservation, and quality scores are useful experiment proxies, not comprehensive perceptual or semantic metrics.
 
 ## How it fits together
 
@@ -40,7 +40,7 @@ The manifest is the contract between data preparation, training, and evaluation.
 
 ## Model architecture
 
-`facebook/musicgen-small` is a composite conditional-generation model with three pretrained components:
+`facebook/musicgen-small` is a composite conditional-generation model with three pretrained components [[1]](#ref-1) [[5]](#ref-5):
 
 ```text
 edit instruction ──> frozen T5 encoder ───────────────┐
@@ -59,7 +59,7 @@ source waveform ──> frozen 32 kHz EnCodec ──> audio codes
                                       frozen EnCodec decoder ──> waveform
 ```
 
-The T5 encoder converts the instruction into text hidden states. EnCodec converts a mono 32 kHz waveform into four streams of discrete codes sampled at 50 frames per second. The 300M-parameter MusicGen decoder autoregressively predicts the four delayed code streams, attending both to prior audio codes and to the text states. EnCodec then decodes the predicted codes into audio.
+The T5 encoder converts the instruction into text hidden states. EnCodec converts a mono 32 kHz waveform into four streams of discrete codes sampled at 50 frames per second [[2]](#ref-2). The 300M-parameter MusicGen decoder autoregressively predicts the four delayed code streams, attending both to prior audio codes and to the text states. EnCodec then decodes the predicted codes into audio [[1]](#ref-1).
 
 In this repository, the source mixture is supplied as an audio prompt and the deterministic edited waveform supplies the supervised target codes. The current generation path is therefore source-conditioned continuation, not a native arbitrary-span editor: it retains the generated continuation and compares it with a same-duration reference edit. That distinction is important when interpreting preservation scores and motivates the architecture directions below.
 
@@ -236,31 +236,29 @@ For reproducible comparisons, keep the base checkpoint, preprocessing, decoding 
 
 ## Future work
 
-- Add padded mini-batching and multi-epoch training.
-- Replace audio proxies with frozen text-audio and quality evaluators.
-- Add explicit untouched-stem preservation loss to the training loop.
-- Log each run and artifact to MLflow with a run-specific UI link.
-- Collect blinded preference pairs and implement preference optimization.
-- Run larger held-out experiments and human evaluation with uncertainty estimates.
+Work should proceed from a reliable LoRA baseline to measured adapter improvements, then to broader evaluation:
 
-### Architecture directions
+- **Stabilize adapter training:** add padded mini-batches, gradient accumulation, multi-epoch sampling, validation loss, checkpoint selection, and deterministic seeds. This creates a repeatable baseline before changing the model or objective.
+- **Train for both editing and preservation:** supplement target-code prediction with an explicit loss on untouched content. Report the edit and preservation terms separately so that improved instruction adherence cannot hide damage to the source mixture.
+- **Strengthen evaluation and tracking:** replace the current audio proxies with frozen text-audio and perceptual-quality evaluators, score held-out songs by edit operation, and log configuration, checkpoints, artifacts, and metrics to MLflow. Add small blinded listening tests with confidence intervals once automatic evaluation is stable.
+- **Explore preference optimization last:** collect validated blind preference pairs only after the supervised baseline is reproducible. Use them to refine the best adapter configuration rather than introducing preference training and architecture changes at the same time.
 
-The current LoRA baseline is intentionally small and useful for measuring whether decoder attention alone can learn the edit task. Stronger editing architectures should be compared against it rather than assumed to be improvements:
+### Incremental architecture improvements
 
-- **Source-aligned latent editor:** encode the source and target into time-aligned EnCodec codes, then condition each target position directly on the corresponding source codes. A learned copy/edit gate could preserve unchanged codes and regenerate only regions affected by the instruction.
-- **Masked infilling instead of continuation:** train a bidirectional or span-denoising latent model to replace selected time/codebook regions. This better matches edits inside an existing clip than causal continuation does.
-- **Residual edit prediction:** predict a sparse latent delta or edit mask relative to the source representation, with an identity objective outside the target stem or time region. This makes preservation part of the architecture rather than only an evaluation metric.
-- **Stem-aware conditioning:** retain separated or grouped source-stem embeddings during training and provide the target instrument and operation as structured conditioning. At inference, a separator could supply those streams when stems are unavailable.
-- **Broader, measured adapter placement:** ablate LoRA on key/output attention projections, feed-forward layers, and source-conditioning projections; vary rank by layer; and compare against the current query/value-only budget at a fixed trainable-parameter count.
+The practical next step is to improve the existing MusicGen + LoRA approach, not replace it with a new generator:
 
-Each direction needs operation-stratified ablations and listening tests. In particular, an architecture should count as better only if edit adherence improves without degrading untouched-content preservation, audio quality, or inference cost beyond the stated budget.
+- **Tune adapter capacity:** compare a small set of ranks and scaling factors while keeping the training data and decoding settings fixed.
+- **Test nearby adapter locations:** compare the current query/value adapters with adapters on all attention projections or selected feed-forward layers, using a similar trainable-parameter budget.
+- **Add explicit edit conditioning:** represent add, remove, and replace as learned operation tokens alongside the text instruction so the same adapter can distinguish the three edit behaviors more reliably.
+
+Choose the next configuration using joint adherence, preservation, quality, memory, and latency results. Change one factor at a time and retain the current query/value-only setup as the baseline.
 
 See [research/roadmap.md](research/roadmap.md), [docs/data_protocol.md](docs/data_protocol.md), and [docs/training_plan.md](docs/training_plan.md) for details.
 
 ## References
 
-- Copet, J. et al. (2023). [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284). The MusicGen architecture, codebook-delay pattern, conditioning, and model scaling.
-- Défossez, A. et al. (2022). [High Fidelity Neural Audio Compression](https://arxiv.org/abs/2210.13438). The EnCodec neural audio codec used to represent waveforms as discrete tokens.
-- Hu, E. J. et al. (2021). [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685). The parameter-efficient adaptation method used by the training path.
-- Manilow, E. et al. (2019). [Cutting Music Source Separation Some Slakh: A Dataset to Study the Impact of Training Data Quality and Quantity](https://www.merl.com/publications/TR2019-124). The source dataset and aligned multitrack construction.
-- Hugging Face. [MusicGen model documentation](https://huggingface.co/docs/transformers/model_doc/musicgen) and [`facebook/musicgen-small` model card](https://huggingface.co/facebook/musicgen-small). The composite Transformers implementation and checkpoint details used here.
+1. <a id="ref-1"></a>Copet, J. et al. (2023). [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284). MusicGen architecture, conditioning, codebook-delay pattern, and model scaling.
+2. <a id="ref-2"></a>Défossez, A. et al. (2022). [High Fidelity Neural Audio Compression](https://arxiv.org/abs/2210.13438). EnCodec neural audio compression and discrete representations.
+3. <a id="ref-3"></a>Hu, E. J. et al. (2021). [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685). Low-rank, parameter-efficient adaptation of frozen model weights.
+4. <a id="ref-4"></a>Manilow, E. et al. (2019). [Cutting Music Source Separation Some Slakh: A Dataset to Study the Impact of Training Data Quality and Quantity](https://www.merl.com/publications/TR2019-124). Slakh dataset construction and aligned multitrack data.
+5. <a id="ref-5"></a>Hugging Face. [MusicGen model documentation](https://huggingface.co/docs/transformers/model_doc/musicgen) and [`facebook/musicgen-small` model card](https://huggingface.co/facebook/musicgen-small). Composite Transformers implementation and checkpoint details.
