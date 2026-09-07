@@ -1,8 +1,14 @@
 # Text-Guided Music Editing and Alignment
 
-Research code for preservation-aware text-guided music editing. The prototype uses MusicGen-small with LoRA adapters and labeled add/remove/replace targets derived from a local Slakh/BabySlakh subset [[1]](#ref-1) [[4]](#ref-4).
+[![CI](https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml/badge.svg)](https://github.com/moseskim1027/text-music-editing-alignment/actions/workflows/ci.yml)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 
-The goal is to make a requested musical change while retaining the parts of the source that the instruction does not target. The repository covers the experimental path from manifest creation and deterministic target construction through adapter training, local inference, evaluation, and run tracking.
+## About
+
+A local-first research prototype for preservation-aware, text-guided music editing. It adapts MusicGen-small with LoRA to add, remove, or replace instruments in short Slakh/BabySlakh mixtures while preserving the musical content not named by the instruction [[1]](#ref-1) [[4]](#ref-4).
+
+The repository covers the complete experimental path from metadata-only manifests and deterministic edit targets through adapter training, inference, evaluation, a compact UI/API, and MLflow tracking.
 
 ## Scope
 
